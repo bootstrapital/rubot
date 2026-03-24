@@ -13,9 +13,11 @@ Rubot is a Rails-native framework for building agentic internal software with:
 - typed tools
 - reasoning agents
 - durable workflows
+- operation-level feature boundaries
 - approvals and human oversight
 - persistent runs, events, and tool calls
 - admin inspection, replay, and evals
+- a mountable admin engine
 
 Rubot should feel like a Rails extension, not a separate app platform.
 
@@ -55,6 +57,10 @@ Use this split:
 - `/ops/...` or other app routes: start and interact with product-facing operations
 - `/rubot/admin/...`: inspect runs, approvals, traces, replay, and governance
 
+Today, the admin surface is implemented as a mountable Rails engine.
+It is not a separate deployed app by default.
+The host app mounts `Rubot::Engine`, and the engine owns its internal admin routes.
+
 If you generate example code, prefer a host-app shape like:
 
 - `app/operations`
@@ -84,6 +90,15 @@ For larger features:
 
 When writing examples, show the visible Rails extension story. Prefer files in app directories over
 hiding everything in initializers.
+
+Current repo guidance:
+
+- the sample host app lives in `sample_app/`
+- the framework-owned admin UI lives in the engine under `app/`, `config/routes.rb`, and related presenters/helpers
+- product-facing sample UI lives in `sample_app/app/...`
+
+If you describe the current repo architecture, do not describe the engine as a standalone app.
+Describe it as a mountable admin/workbench engine used by a host Rails app.
 
 
 What Rubot Is Good At
@@ -147,17 +162,24 @@ Rubot already has real runtime support for:
 - tools
 - agents
 - workflows
+- operations
 - runs
 - approvals
 - events
 - provider-backed agents
 - async execution via jobs
+- subject-bound runs via `Rubot.run_for`, `Rubot.enqueue_for`, and `Operation.launch_for`
+- subject-scoped run lookup
+- subject-scoped memory adapters
 - replay
 - evals
 - a Rails admin engine
 - memory processors
 - dynamic agent resolution
 - middleware
+- policy adapters
+- cancellation and execution checkpoints
+- Active Record execution claims / concurrency protection
 - MCP-backed tool integration
 
 Rubot's desired long-term shape also includes:
@@ -169,6 +191,31 @@ Rubot's desired long-term shape also includes:
 
 When generating code, favor the desired conceptual shape without pretending unsupported APIs exist.
 Be explicit about whether you are using current runtime capabilities or proposing a future DSL.
+
+
+Current APIs To Prefer
+----------------------
+
+When describing what a developer can do today, prefer these concrete APIs:
+
+- `Rubot.run(...)`
+- `Rubot.enqueue(...)`
+- `Rubot.run_for(subject, ...)`
+- `Rubot.enqueue_for(subject, ...)`
+- `Operation.launch(...)`
+- `Operation.launch_for(subject, ...)`
+- `Operation.enqueue(...)`
+- `Operation.enqueue_for(subject, ...)`
+
+For subject-aware features:
+
+- prefer attaching a real subject record when one exists
+- prefer store lookups by subject instead of ad hoc matching
+
+For persistence in Rails:
+
+- prefer `Rubot::Stores::ActiveRecordStore`
+- treat `MemoryStore` as a dev/test/demo convenience
 
 
 Admin vs Product UI
@@ -190,6 +237,13 @@ Admin/governance UI:
 
 Do not merge these concepts in docs or generated code.
 
+If asked how the sample app works:
+
+- `sample_app` is the host Rails app
+- Rubot admin is mounted into it
+- host routes own `/` and `/ops/...`
+- engine routes own `/rubot/admin/...`
+
 
 State and Observability
 -----------------------
@@ -202,6 +256,14 @@ Important runtime objects:
 - `Rubot::Approval`
 - `Rubot::Event`
 - tool call records in the configured store
+
+Rubot now also tracks operational state relevant to safer execution, including:
+
+- subject references
+- replay metadata
+- checkpoints
+- cancellation requests
+- cancellation completion
 
 When building workflows:
 
@@ -231,6 +293,9 @@ Current high-value processors include:
 
 - token limiting
 - filtering or compressing verbose tool-call history
+
+Rubot also supports optional subject-scoped memory retrieval through a subject memory adapter.
+Use that for contextual enrichment tied to a Rails record, not as a replacement for canonical run history.
 
 If you add new memory behavior, preserve full auditability and make context shaping explicit.
 
@@ -268,6 +333,29 @@ Use middleware for:
 
 Do not bury those concerns deep inside agent prompts when they are really runtime policy concerns.
 
+Separate but related: policy adapters exist today for Rails authorization integration.
+If authorization is app/policy-level rather than prompt-level, prefer policy adapters or middleware over prompt instructions.
+
+
+Policies
+--------
+
+Rubot currently has a policy layer for runtime and admin authorization checks.
+
+Concrete support exists for:
+
+- `Rubot::Policy::PunditAdapter`
+- `Rubot::Policy::CanCanAdapter`
+
+Typical authorization decisions include:
+
+- can this actor start a run?
+- can this actor view a run?
+- can this actor approve a run?
+- can this tool execute in this context?
+
+When describing authorization, say that Rubot wraps standard Rails authz layers; it does not replace app auth.
+
 
 MCP
 ---
@@ -302,6 +390,8 @@ When no provider is configured:
 
 Prefer provider-backed reasoning for genuinely fuzzy/model tasks.
 Prefer plain Ruby for deterministic application logic.
+
+In the sample app, provider-backed reasoning is optional and can fall back to deterministic Ruby behavior for demos.
 
 
 How to Model Features
@@ -343,12 +433,18 @@ A good host app structure is:
 
 For example:
 
-- `app/operations/resume_screener_operation.rb`
+- `app/operations/resume_screener/operation.rb`
 - `app/workflows/resume_screener/workflow.rb`
 - `app/agents/resume_screener/screening_agent.rb`
 - `app/tools/resume_screener/load_job_description_tool.rb`
 
 This visibly communicates that Rubot extends Rails rather than replacing it.
+
+The current sample app also demonstrates:
+
+- product-facing routes under `/ops/...`
+- the admin engine mounted under `/rubot/admin`
+- Active Record-backed Rubot persistence
 
 
 When Generating Code
@@ -363,6 +459,8 @@ Prefer:
 - operation-level feature grouping
 - small, composable classes
 - real app directories over initializer-only definitions
+- host-app routes for product UI and engine routes for admin
+- relative links in repo documentation
 
 Avoid:
 
@@ -372,6 +470,7 @@ Avoid:
 - mutating canonical history for context-window reasons
 - bypassing middleware or audit surfaces
 - inventing unsupported APIs without clearly marking them aspirational
+- describing the engine as a separate standalone app unless the user is explicitly discussing a future packaging change
 
 
 Documentation Priorities

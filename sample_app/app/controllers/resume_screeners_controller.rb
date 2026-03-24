@@ -2,17 +2,17 @@
 
 class ResumeScreenersController < ApplicationController
   def show
-    @job_options = ResumeScreenerOperation.job_options
+    @job_options = ResumeScreener::Operation.job_options
     @selected_job_id = params[:job_id].presence || @job_options.first&.last
-    @job_description = ResumeScreenerOperation.job_description(@selected_job_id)
+    @job_description = ResumeScreener::Operation.job_description(@selected_job_id)
     @resume_text = params[:resume_text].to_s
     @candidate_name = params[:candidate_name].to_s
   end
 
   def create
-    @job_options = ResumeScreenerOperation.job_options
+    @job_options = ResumeScreener::Operation.job_options
     @selected_job_id = screener_params[:job_id]
-    @job_description = ResumeScreenerOperation.job_description(@selected_job_id)
+    @job_description = ResumeScreener::Operation.job_description(@selected_job_id)
     @candidate_name = screener_params[:candidate_name].to_s
     @resume_text = resolve_resume_text
 
@@ -21,7 +21,7 @@ class ResumeScreenersController < ApplicationController
       return render :show, status: :unprocessable_entity
     end
 
-    @run = ResumeScreenerOperation.launch(
+    @run = ResumeScreener::Operation.launch(
       payload: {
         job_id: @selected_job_id,
         candidate_name: @candidate_name,

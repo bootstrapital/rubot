@@ -9,7 +9,7 @@ This is a minimal Rails host app for previewing the Rubot engine locally and dem
 - serves the resume screener operation at `/ops/resume_screener`
 - uses `Rubot::Stores::ActiveRecordStore`
 - composes the feature across:
-  - [`app/operations/resume_screener_operation.rb`](./app/operations/resume_screener_operation.rb)
+  - [`app/operations/resume_screener/operation.rb`](./app/operations/resume_screener/operation.rb)
   - [`app/tools/resume_screener/load_job_description_tool.rb`](./app/tools/resume_screener/load_job_description_tool.rb)
   - [`app/tools/resume_screener/prepare_resume_tool.rb`](./app/tools/resume_screener/prepare_resume_tool.rb)
   - [`app/agents/resume_screener/screening_agent.rb`](./app/agents/resume_screener/screening_agent.rb)

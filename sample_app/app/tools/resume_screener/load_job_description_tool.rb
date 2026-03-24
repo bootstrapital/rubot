@@ -17,7 +17,7 @@ module ResumeScreener
     end
 
     def call(job_id:)
-      details = ResumeScreenerOperation.job_description(job_id)
+      details = ResumeScreener::Operation.job_description(job_id)
       details.merge(job_id: job_id)
     rescue KeyError
       raise Rubot::ValidationError, "Unknown job description #{job_id}"

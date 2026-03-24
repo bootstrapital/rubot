@@ -1,6 +1,6 @@
 # Rubot API Nouns and Verbs
 
-This document explains Rubot's desired-state API shape. It is not limited to what exists in the codebase today. The goal is to make the conceptual model explicit so the framework can evolve toward a coherent developer experience instead of accumulating unrelated primitives.
+This document explains Rubot's desired-state API shape while also calling out the major pieces that already exist in the codebase today. The goal is to make the conceptual model explicit so the framework can evolve toward a coherent developer experience instead of accumulating unrelated primitives.
 
 The anchor idea is:
 
@@ -30,6 +30,31 @@ Rubot should let developers build internal software with AI the same way they bu
 For small use cases, that should fit in one place. For larger systems, the same concepts should split cleanly into separate files and modules.
 
 Rubot should therefore feel like a Rails extension, not a parallel application framework.
+
+## Current State
+
+Today, Rubot already includes real support for:
+
+- `Tool`
+- `Agent`
+- `Workflow`
+- `Operation`
+- `Run`, `Approval`, and `Event`
+- provider-backed agents
+- Active Job-backed execution
+- replay and evals
+- a mountable admin engine
+- memory processors
+- dynamic agent resolution
+- middleware
+- policy adapters
+- subject-bound runs and subject-scoped lookup
+- cancellation, checkpoints, and Active Record execution claims
+
+So this document should be read as:
+
+- partly a description of the system that already exists
+- partly a description of where the API should continue to converge
 
 ## Core Nouns
 
@@ -65,6 +90,15 @@ An operation is larger than a workflow. It is the feature boundary.
 
 An operation is **not** the same thing as the full Rails UI surface. In a Rails app, the operation should usually be invoked from normal controllers, routes, and views.
 
+Current Rubot state:
+
+- `Rubot::Operation` already exists
+- operations can define workflows, agents, tools, triggers, and memory config
+- operations can launch and enqueue runs
+- subject-aware helpers like `launch_for` and `enqueue_for` already exist
+
+What is still evolving is the outer authoring polish, especially around richer trigger modeling and operation-local UI contracts.
+
 ### Workflow
 
 A `Workflow` is the orchestration graph inside an operation.
@@ -86,6 +120,12 @@ A workflow coordinates:
 - resumptions
 
 An operation may contain one workflow or multiple workflows.
+
+Current Rubot state:
+
+- `Rubot::Workflow` is a real execution primitive today
+- workflows already support ordered steps, tool steps, agent steps, approval steps, and resume behavior
+- workflows now also record checkpoints to make resumed execution safer and more inspectable
 
 ### Agent
 
@@ -111,6 +151,12 @@ In the desired state, agent properties can be partly dynamic at runtime, especia
 - model
 - available tools
 
+Current Rubot state:
+
+- dynamic resolution for instructions, model, and tools already exists
+- middleware already wraps agent/provider execution
+- provider-backed agents and plain-Ruby agents are both supported
+
 ### Tool
 
 A `Tool` is an explicit application action.
@@ -134,6 +180,13 @@ Tools should remain:
 - policy-aware
 - safe to expose to agents
 
+Current Rubot state:
+
+- tools already validate input and output
+- tool calls are audited into runs
+- tools can declare idempotency and retry behavior
+- tool execution can be policy-checked
+
 ### Run
 
 A `Run` is a concrete execution instance.
@@ -155,6 +208,12 @@ A run tracks:
 - errors
 
 Runs are durable and inspectable.
+
+Current Rubot state:
+
+- runs already carry trace metadata, replay metadata, subject references, tool calls, approvals, and events
+- runs also track cancellation requests and step checkpoints
+- Active Record persistence is available through `Rubot::Stores::ActiveRecordStore`
 
 ### Approval
 
@@ -255,6 +314,13 @@ Examples:
 
 The subject gives Rubot a natural home in the Rails app.
 
+Current Rubot state:
+
+- subject binding is already first-class in runs
+- `Rubot.run_for(subject, ...)` and `Rubot.enqueue_for(subject, ...)` already exist
+- stores can look up runs by subject
+- subject memory adapters can enrich model context without replacing canonical history
+
 ### UI Surface
 
 A `UI Surface` is the operator-facing presentation for an operation.
@@ -323,6 +389,12 @@ Good mental split:
 - `/ops/...` or other app routes: do the work
 - `/rubot/admin/...`: inspect and govern the work
 
+Current Rubot state:
+
+- the admin surface is currently implemented as a mountable Rails engine
+- the host app owns the outer mount path
+- the engine owns runs, approvals, replay, dashboard, and playground routes inside that mount
+
 ## Core Verbs
 
 ### Define
@@ -350,6 +422,12 @@ Examples:
 
 This is how backend concerns like webhooks and cron fit into the model.
 
+Current Rubot state:
+
+- operation triggers already exist in a first-pass form
+- they currently support trigger resolution and operation launch/enqueue helpers
+- the richer trigger surface remains an area for future refinement
+
 ### Run
 
 To `run` is to execute a workflow or agent synchronously or asynchronously.
@@ -358,6 +436,8 @@ Examples in current Rubot terms:
 
 - `Rubot.run(...)`
 - `Rubot.enqueue(...)`
+- `Rubot.run_for(subject, ...)`
+- `Rubot.enqueue_for(subject, ...)`
 
 Desired-state meaning:
 
@@ -495,6 +575,12 @@ Controllers and APIs are entrypoints into operations.
 
 They should not replace the operation model. They should delegate into it.
 
+Current Rubot state:
+
+- this is already the intended pattern in the sample app
+- the sample app owns `/` and `/ops/...`
+- the Rubot engine is mounted under `/rubot/admin`
+
 ### Notifications
 
 Notifications are operation side effects.
@@ -534,6 +620,11 @@ Purpose:
 
 These processors should never mutate canonical stored history.
 
+Current Rubot state:
+
+- `TokenLimiter` and `ToolCallFilter` already exist
+- subject-scoped memory retrieval also exists through a separate subject memory adapter
+
 ## Dynamic Agents: Desired-State Model
 
 Agents should support runtime-resolved properties.
@@ -554,6 +645,11 @@ Likely dynamic fields:
 
 The important constraint is that dynamic behavior should still remain inspectable and policy-governed.
 
+Current Rubot state:
+
+- this is already implemented for instructions, model, and tools
+- resolved configuration is emitted into run events for inspection
+
 ## Middleware: Desired-State Model
 
 Middleware should be the perimeter around agent execution.
@@ -569,6 +665,11 @@ That means Rubot should have a stable place to plug in:
 
 Middleware should happen before broad external tool expansion, not after.
 
+Current Rubot state:
+
+- middleware support already exists around agent execution
+- policy adapters also exist as a separate authorization layer for runtime and admin checks
+
 ## MCP: Desired-State Model
 
 Rubot should support MCP as an external tool ecosystem, but MCP should enter through Rubot's tool model.
@@ -580,6 +681,11 @@ That means:
 - run them through middleware, policies, approvals, and tracing
 
 MCP should expand integration speed without bypassing Rubot governance.
+
+Current Rubot state:
+
+- MCP-backed tool integration already exists in a first pass
+- remote tools are normalized into Rubot tool surfaces rather than bypassing them
 
 ## UI: Desired-State Model
 
@@ -596,6 +702,12 @@ This is the immediate operator surface for a specific feature:
 
 This should be closely coupled to the operation definition.
 
+Current Rubot state:
+
+- the repo currently uses a host-app composition model rather than a full operation-owned UI DSL
+- that means Rails controllers and views remain the product-facing UI layer
+- the operation remains the execution boundary underneath
+
 ### Platform-Level UI
 
 This is the admin/operator framework around all operations:
@@ -607,6 +719,11 @@ This is the admin/operator framework around all operations:
 - reusable internal-tool components
 
 This should evolve after the runtime and operator behaviors are real enough to design against.
+
+Current Rubot state:
+
+- the platform-level admin UI already exists as the engine surface
+- it includes dashboard, runs, approvals, replay, trace-oriented views, and playground support
 
 ## Small-App DX vs Large-App DX
 
@@ -623,6 +740,11 @@ For a small internal workflow, a developer should be able to define everything n
 - UI
 
 This may be one file or one small directory.
+
+Current Rubot state:
+
+- the framework supports this in a basic way through `Rubot::Operation`
+- the preferred visible Rails pattern in the repo is still a small directory of `app/operations`, `app/tools`, `app/agents`, and `app/workflows`
 
 ### Large-App Decomposition
 
@@ -691,22 +813,33 @@ Today, Rubot already has strong foundations in:
 - tools
 - agents
 - workflows
+- operations
 - runs
 - approvals
+- events
 - provider abstraction
 - job-backed execution
+- replay
+- evals
+- subject-bound execution
+- subject memory adapters
+- memory processors
+- dynamic agents
+- middleware
+- policy adapters
+- admin engine
+- MCP integration
+- cancellation and checkpointing
 
 The desired-state gaps are mostly in:
 
-- `Operation` as a first-class authoring primitive
-- middleware
-- memory processors
-- dynamic agents
-- trigger modeling
+- polishing `Operation` into a clearer first-class authoring primitive
+- richer trigger modeling
 - operation-local UI
-- MCP integration
+- deeper admin packaging and customization
+- documentation and generator alignment around the current architecture
 
-That is a good position to be in. The current implementation is not fighting the desired model. It just has not yet elevated all of the desired concepts into first-class API surfaces.
+That is a good position to be in. The current implementation is not fighting the desired model. Most of the work now is about cleanup, consistency, and making the existing capabilities feel more intentional.
 
 ## Summary
 

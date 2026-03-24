@@ -2,7 +2,7 @@
 
 Rubot is a Rails-native framework for building agentic internal tools with workflow state, approvals, and human oversight.
 
-This repository now includes a V1 framework skeleton focused on Milestone 1 from [`tech-spec.md`](./tech-spec.md): a usable DSL, a small runtime, Rails hooks, generators, tests, and docs that make the first workflow straightforward to build.
+This repository now includes a `v0.1` framework skeleton focused on the initial core-runtime milestone from [`tech-spec.md`](./tech-spec.md): a usable DSL, a small runtime, Rails hooks, generators, tests, and docs that make the first workflow straightforward to build.
 
 The intended Rails shape is:
 

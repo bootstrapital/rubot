@@ -35,7 +35,7 @@ Rubot should:
 * support operator-facing UIs with live progress and intervention points
 * remain useful even without a hosted control plane
 
-### 3.2 Non-goals for V1
+### 3.2 Non-goals for v0.1
 
 Rubot should not initially try to be:
 
@@ -976,7 +976,7 @@ config/
 
 Small or single-purpose apps should also be able to co-locate operation definitions, tools, agents, workflow, and UI in one file before splitting them into separate folders.
 
-## 21. V1 Milestones
+## 21. v0.1 Milestones
 
 ### Milestone 1: Core runtime
 
