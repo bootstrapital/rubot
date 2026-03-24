@@ -1,0 +1,17 @@
+<section class="rubot-page">
+  <% if rubot_live_updates_enabled? %>
+    <%= turbo_stream_from Rubot::LiveUpdates.approvals_stream_name %>
+  <% end %>
+
+  <header class="rubot-page__header">
+    <div>
+      <p class="rubot-eyebrow">Rubot</p>
+      <h1>Approval Inbox</h1>
+    </div>
+    <%= link_to "All Runs", rubot.runs_path, class: "rubot-link" %>
+  </header>
+
+  <div class="rubot-table-wrap">
+    <%= render "index_content", approvals: @approvals %>
+  </div>
+</section>

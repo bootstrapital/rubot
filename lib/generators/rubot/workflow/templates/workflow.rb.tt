@@ -1,0 +1,18 @@
+class <%= class_name %>Workflow < Rubot::Workflow
+  step :load_context
+  approval_step :review_recommendation, role: "ops"
+  step :finalize
+
+  def load_context
+    run.state[:brief] = {
+      summary: "Review #{@run.input[:subject_id]}"
+    }
+  end
+
+  def finalize
+    run.state[:result] = {
+      outcome: "approved",
+      brief: run.state[:brief]
+    }
+  end
+end

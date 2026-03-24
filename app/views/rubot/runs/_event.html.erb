@@ -1,0 +1,10 @@
+<li>
+  <div class="rubot-timeline__meta">
+    <strong><%= event.type %></strong>
+    <span><%= event.timestamp.iso8601 %></span>
+  </div>
+  <% if event.step_name %>
+    <p>step: <%= event.step_name %></p>
+  <% end %>
+  <pre><%= rubot_json(event.payload) %></pre>
+</li>

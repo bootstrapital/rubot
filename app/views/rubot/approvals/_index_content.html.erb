@@ -1,0 +1,18 @@
+<div id="<%= Rubot::LiveUpdates.approvals_inbox_dom_id %>">
+  <% if approvals.any? %>
+    <table class="rubot-table">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Step</th>
+          <th>Role</th>
+          <th>Reason</th>
+          <th></th>
+        </tr>
+      </thead>
+      <%= render "inbox", approvals: approvals %>
+    </table>
+  <% else %>
+    <%= render "rubot/runs/empty_state", title: "Approval inbox is clear", body: "Pending approval requests will appear here as runs reach human review steps." %>
+  <% end %>
+</div>

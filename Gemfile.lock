@@ -1,0 +1,20 @@
+PATH
+  remote: .
+  specs:
+    rubot (0.1.0)
+      json
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json (2.18.1)
+
+PLATFORMS
+  arm64-darwin-23
+  ruby
+
+DEPENDENCIES
+  rubot!
+
+BUNDLED WITH
+   2.5.5

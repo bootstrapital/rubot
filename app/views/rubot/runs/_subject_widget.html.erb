@@ -1,0 +1,22 @@
+<article class="rubot-panel">
+  <h2>Rubot Activity</h2>
+  <p class="rubot-card__meta"><%= subject.class.name %></p>
+
+  <% if runs.any? %>
+    <div class="rubot-card-list">
+      <% runs.each do |run| %>
+        <section class="rubot-card">
+          <div class="rubot-card__header">
+            <div>
+              <h3><%= link_to run.name, rubot.run_path(run.id), class: "rubot-link" %></h3>
+              <p class="rubot-card__meta"><%= run.current_step %></p>
+            </div>
+            <%= rubot_status_badge(run.run.status) %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "empty_state", title: "No activity for this subject", body: "Rubot runs associated with this record will appear here." %>
+  <% end %>
+</article>

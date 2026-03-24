@@ -1,0 +1,18 @@
+class <%= class_name %> < Rubot::Tool
+  description "Explain what this tool does."
+  idempotent!
+
+  input_schema do
+    string :subject_id
+  end
+
+  output_schema do
+    string :message
+  end
+
+  def call(subject_id:)
+    {
+      message: "Handled #{subject_id}"
+    }
+  end
+end

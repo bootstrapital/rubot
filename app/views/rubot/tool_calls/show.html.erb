@@ -1,0 +1,52 @@
+<section class="rubot-page">
+  <header class="rubot-page__header">
+    <div>
+      <p class="rubot-eyebrow">Tool Call</p>
+      <h1><%= @tool_call.short_name %></h1>
+    </div>
+    <div class="rubot-actions">
+      <%= link_to "Back to Run", rubot.run_path(@run.id), class: "rubot-link" %>
+      <%= link_to "Approval Inbox", rubot.approvals_path, class: "rubot-link" %>
+    </div>
+  </header>
+
+  <section class="rubot-panel-grid">
+    <article class="rubot-panel">
+      <h2>Overview</h2>
+      <dl class="rubot-kv">
+        <dt>Status</dt>
+        <dd><%= rubot_status_badge(@tool_call.status) %></dd>
+        <dt>Step</dt>
+        <dd><%= @tool_call.step_name || "unscoped" %></dd>
+        <dt>Duration</dt>
+        <dd><%= @tool_call.duration_ms ? "#{@tool_call.duration_ms}ms" : "n/a" %></dd>
+      </dl>
+
+      <% if @tool_call.confidence || @tool_call.warnings.any? %>
+        <div class="rubot-badge-row">
+          <%= rubot_confidence_badge(@tool_call.confidence) %>
+          <%= rubot_warning_badges(@tool_call.warnings) %>
+        </div>
+      <% end %>
+    </article>
+  </section>
+
+  <section class="rubot-panel-grid">
+    <article class="rubot-panel">
+      <h2>Input</h2>
+      <pre><%= rubot_json(@tool_call.input) %></pre>
+    </article>
+
+    <article class="rubot-panel">
+      <h2>Output</h2>
+      <pre><%= rubot_json(@tool_call.output) %></pre>
+    </article>
+  </section>
+
+  <% if @tool_call.error %>
+    <article class="rubot-panel rubot-panel--danger">
+      <h2>Error</h2>
+      <pre><%= rubot_json(@tool_call.error) %></pre>
+    </article>
+  <% end %>
+</section>

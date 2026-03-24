@@ -1,0 +1,4 @@
+<article class="rubot-panel" id="<%= Rubot::LiveUpdates.run_output_dom_id(run.id) %>">
+  <h2>Output</h2>
+  <pre><%= rubot_json(run.output) %></pre>
+</article>

@@ -1,0 +1,33 @@
+<article class="rubot-panel">
+  <h2>Tool Calls</h2>
+
+  <% if run.tool_calls.any? %>
+    <div class="rubot-card-list">
+      <% run.tool_calls.each do |tool_call| %>
+        <section class="rubot-card">
+          <div class="rubot-card__header">
+            <div>
+              <h3><%= link_to tool_call.short_name, rubot.run_tool_call_path(run.id, tool_call.id), class: "rubot-link" %></h3>
+              <p class="rubot-card__meta">
+                <%= tool_call.step_name || "unscoped" %>
+                <% if tool_call.duration_ms %>
+                  · <%= tool_call.duration_ms %>ms
+                <% end %>
+              </p>
+            </div>
+            <%= rubot_status_badge(tool_call.status) %>
+          </div>
+
+          <% if tool_call.confidence || tool_call.warnings.any? %>
+            <div class="rubot-badge-row">
+              <%= rubot_confidence_badge(tool_call.confidence) %>
+              <%= rubot_warning_badges(tool_call.warnings) %>
+            </div>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "empty_state", title: "No tool calls", body: "This run has not invoked any tools yet." %>
+  <% end %>
+</article>

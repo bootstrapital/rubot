@@ -1,0 +1,21 @@
+class <%= class_name %>Agent < Rubot::Agent
+  instructions do
+    <<~TEXT
+      Describe the job this agent performs.
+    TEXT
+  end
+
+  input_schema do
+    string :subject_id
+  end
+
+  output_schema do
+    string :summary
+  end
+
+  def perform(input:, run:, context:)
+    {
+      summary: "Implemented #{self.class.name} for #{input[:subject_id]}"
+    }
+  end
+end

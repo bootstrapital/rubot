@@ -1,0 +1,7 @@
+<tr id="rubot_approval_<%= approval.run_id %>_<%= approval.step_name %>">
+  <td><%= link_to approval.run_name, rubot.run_path(approval.run_id) %></td>
+  <td><%= approval.step_name %></td>
+  <td><%= approval.role_requirement %></td>
+  <td><%= approval.reason %></td>
+  <td><%= link_to "Review", rubot.run_path(approval.run_id), class: "rubot-link" %></td>
+</tr>

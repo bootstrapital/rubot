@@ -1,0 +1,7 @@
+<tr id="rubot_run_<%= run.id %>">
+  <td><%= link_to run.name, rubot.run_path(run.id) %></td>
+  <td><%= rubot_status_badge(run.run.status) %></td>
+  <td><%= run.current_step %></td>
+  <td><%= run.started_at %></td>
+  <td><%= run.duration %></td>
+</tr>

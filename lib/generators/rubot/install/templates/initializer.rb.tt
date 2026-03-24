@@ -1,0 +1,9 @@
+Rubot.configure do |config|
+  # Pipe events into your app's logging or tracing stack.
+  config.event_subscriber = lambda do |run, event|
+    Rails.logger.info("[rubot] #{run.id} #{event.type} #{event.payload.to_json}")
+  end
+
+  # Replace with an Active Record-backed store in production.
+  config.store = Rubot::Stores::MemoryStore.new
+end

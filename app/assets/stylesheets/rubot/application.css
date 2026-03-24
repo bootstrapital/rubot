@@ -1,0 +1,180 @@
+.rubot-page {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: #111827;
+  background: linear-gradient(180deg, #fcfbf7 0%, #f5efe4 100%);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.rubot-page__header,
+.rubot-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rubot-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #92400e;
+}
+
+.rubot-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.rubot-panel,
+.rubot-table-wrap {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e5dcc9;
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 12px 32px rgba(120, 53, 15, 0.08);
+}
+
+.rubot-panel--danger {
+  border-color: #fecaca;
+  background: rgba(254, 242, 242, 0.95);
+}
+
+.rubot-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.rubot-table th,
+.rubot-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid #f1eadb;
+  vertical-align: top;
+}
+
+.rubot-kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.5rem 1rem;
+}
+
+.rubot-kv dt {
+  font-weight: 700;
+}
+
+.rubot-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.rubot-timeline li {
+  border-left: 3px solid #d97706;
+  padding-left: 1rem;
+}
+
+.rubot-timeline__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rubot-badge {
+  display: inline-flex;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.rubot-badge--running { background: #dbeafe; color: #1d4ed8; }
+.rubot-badge--waiting-for-approval { background: #fef3c7; color: #92400e; }
+.rubot-badge--completed { background: #dcfce7; color: #166534; }
+.rubot-badge--failed { background: #fee2e2; color: #b91c1c; }
+.rubot-badge--queued { background: #e5e7eb; color: #374151; }
+.rubot-badge--warning { background: #ffedd5; color: #9a3412; }
+.rubot-badge--confidence-high { background: #dcfce7; color: #166534; }
+.rubot-badge--confidence-medium { background: #fef3c7; color: #92400e; }
+.rubot-badge--confidence-low { background: #fee2e2; color: #b91c1c; }
+
+.rubot-link {
+  color: #9a3412;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.rubot-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
+.rubot-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.rubot-form input,
+.rubot-form textarea {
+  width: 100%;
+  border: 1px solid #d6c4a7;
+  border-radius: 12px;
+  padding: 0.75rem;
+  font: inherit;
+}
+
+.rubot-button {
+  background: #111827;
+  color: white;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+
+.rubot-button--secondary {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.rubot-card-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.rubot-card {
+  border: 1px solid #eadfca;
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(255, 252, 245, 0.92);
+}
+
+.rubot-card__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rubot-card__meta {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.rubot-empty-state {
+  padding: 2rem;
+  text-align: center;
+}

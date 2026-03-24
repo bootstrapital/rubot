@@ -1,0 +1,41 @@
+<article class="rubot-panel">
+  <h2>Steps</h2>
+
+  <% if run.step_groups.any? %>
+    <div class="rubot-card-list">
+      <% run.step_groups.each do |step| %>
+        <section class="rubot-card">
+          <div class="rubot-card__header">
+            <div>
+              <h3><%= step[:name] %></h3>
+              <p class="rubot-card__meta"><%= step[:events].size %> event<%= "s" unless step[:events].size == 1 %></p>
+            </div>
+            <%= rubot_status_badge(step[:status]) %>
+          </div>
+
+          <% if step[:confidence] || step[:warnings].any? %>
+            <div class="rubot-badge-row">
+              <%= rubot_confidence_badge(step[:confidence]) %>
+              <%= rubot_warning_badges(step[:warnings]) %>
+            </div>
+          <% end %>
+
+          <% if step[:result] %>
+            <pre><%= rubot_json(step[:result]) %></pre>
+          <% end %>
+
+          <% if step[:tool_calls].any? %>
+            <p class="rubot-card__meta">
+              Tools:
+              <% step[:tool_calls].each do |tool_call| %>
+                <%= link_to tool_call.short_name, rubot.run_tool_call_path(run.id, tool_call.id), class: "rubot-link" %>
+              <% end %>
+            </p>
+          <% end %>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "empty_state", title: "No step activity yet", body: "The run timeline will expand here once execution begins." %>
+  <% end %>
+</article>

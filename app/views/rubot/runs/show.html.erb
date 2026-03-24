@@ -1,0 +1,40 @@
+<section class="rubot-page">
+  <% if rubot_live_updates_enabled? %>
+    <%= turbo_stream_from Rubot::LiveUpdates.run_stream_name(@run.id) %>
+  <% end %>
+
+  <header class="rubot-page__header">
+    <div>
+      <p class="rubot-eyebrow">Run</p>
+      <h1><%= @run.name %></h1>
+    </div>
+    <div class="rubot-actions">
+      <%= link_to "All Runs", rubot.runs_path, class: "rubot-link" %>
+      <%= link_to "Approval Inbox", rubot.approvals_path, class: "rubot-link" %>
+    </div>
+  </header>
+
+  <section class="rubot-panel-grid">
+    <%= render "overview", run: @run %>
+    <%= render "output", run: @run %>
+  </section>
+
+  <% if @run.failed? %>
+    <article class="rubot-panel rubot-panel--danger">
+      <h2>Failure</h2>
+      <pre><%= rubot_json(@run.error) %></pre>
+    </article>
+  <% end %>
+
+  <% if @run.subject_label %>
+    <article class="rubot-panel">
+      <h2>Subject</h2>
+      <p><%= @run.subject_label %></p>
+    </article>
+  <% end %>
+
+  <%= render "pending_approval", run: @run %>
+  <%= render "steps", run: @run %>
+  <%= render "tool_calls", run: @run %>
+  <%= render "timeline", run: @run %>
+</section>
