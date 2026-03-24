@@ -1,0 +1,18 @@
+<% presenter = local_assigns[:run] || @run %>
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2>Metrics</h2>
+    <span class="rubot-card__meta">Normalized from run, approval, tool, and model events</span>
+  </div>
+
+  <section class="rubot-stats-grid">
+    <%= render "rubot/shared/stat", label: "Duration", value: (presenter.metrics[:duration_seconds] ? "#{presenter.metrics[:duration_seconds]}s" : "n/a"), tone: "neutral" %>
+    <%= render "rubot/shared/stat", label: "Approval Wait", value: (presenter.metrics[:approval_wait_seconds] ? "#{presenter.metrics[:approval_wait_seconds]}s" : "n/a"), tone: "warning" %>
+    <%= render "rubot/shared/stat", label: "Tool Failures", value: presenter.metrics[:tool_calls_failed], tone: (presenter.metrics[:tool_calls_failed].positive? ? "danger" : "neutral") %>
+    <%= render "rubot/shared/stat", label: "Model Tokens", value: presenter.metrics[:model_tokens], tone: "info" %>
+  </section>
+
+  <% if presenter.metrics[:model_cost] && presenter.metrics[:model_cost].positive? %>
+    <p class="rubot-card__meta">Estimated model cost: $<%= format("%.6f", presenter.metrics[:model_cost]) %></p>
+  <% end %>
+</article>

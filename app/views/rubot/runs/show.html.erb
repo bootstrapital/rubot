@@ -9,6 +9,7 @@
       <h1><%= @run.name %></h1>
     </div>
     <div class="rubot-actions">
+      <%= button_to "Replay Run", rubot.replay_run_path(@run.id), method: :post, class: "rubot-button" %>
       <%= link_to "All Runs", rubot.runs_path, class: "rubot-link" %>
       <%= link_to "Approval Inbox", rubot.approvals_path, class: "rubot-link" %>
     </div>
@@ -33,8 +34,28 @@
     </article>
   <% end %>
 
+  <article class="rubot-panel">
+    <h2>Trace</h2>
+    <dl class="rubot-kv">
+      <dt>Trace ID</dt>
+      <dd><%= @run.trace_id %></dd>
+      <dt>Replay Of</dt>
+      <dd><%= @run.replay_of_run_id || "original run" %></dd>
+    </dl>
+  </article>
+
+  <% if @comparison_run %>
+    <%= render "rubot/shared/diff_block",
+               title: "Replay Comparison",
+               meta: "Comparing #{@comparison_run.id} to #{@run.id}",
+               before_value: @comparison_run.output,
+               after_value: @run.output %>
+  <% end %>
+
+  <%= render "metrics", run: @run %>
   <%= render "pending_approval", run: @run %>
   <%= render "steps", run: @run %>
   <%= render "tool_calls", run: @run %>
+  <%= render "trace_viewer", run: @run %>
   <%= render "timeline", run: @run %>
 </section>

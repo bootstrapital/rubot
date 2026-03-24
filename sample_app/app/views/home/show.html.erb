@@ -1,0 +1,107 @@
+<section class="app-home">
+  <div class="app-home__hero">
+    <div>
+      <p class="app-home__eyebrow">Workspace</p>
+      <h1>Operations Home</h1>
+      <p class="app-home__lede">
+        Launch operations, check approval work, and jump into the Rubot admin surface when you need deeper inspection.
+      </p>
+    </div>
+    <div class="app-home__actions">
+      <%= link_to "Open Admin", "/rubot/admin", class: "app-home__button" %>
+      <%= link_to "Approval Queue", "/rubot/admin/approvals", class: "app-home__button app-home__button--secondary" %>
+    </div>
+  </div>
+
+  <div class="app-home__grid">
+    <section class="app-panel">
+      <div class="app-panel__header">
+        <div>
+          <p class="app-home__eyebrow">Available Ops</p>
+          <h2>Operations</h2>
+        </div>
+      </div>
+
+      <div class="app-card-list">
+        <% @available_operations.each do |operation| %>
+          <article class="app-card">
+            <h3><%= operation[:name] %></h3>
+            <p><%= operation[:description] %></p>
+            <%= link_to "Open Operation", operation[:path], class: "app-home__button" %>
+          </article>
+        <% end %>
+      </div>
+    </section>
+
+    <section class="app-panel">
+      <div class="app-panel__header">
+        <div>
+          <p class="app-home__eyebrow">Approvals</p>
+          <h2>Pending Approval Work</h2>
+        </div>
+      </div>
+
+      <% if @pending_approvals.any? %>
+        <ul class="app-list">
+          <% @pending_approvals.each do |run| %>
+            <li>
+              <strong><%= run.name %></strong>
+              <span><%= run.current_step %></span>
+              <%= link_to "Review", "/rubot/admin/runs/#{run.id}", class: "app-inline-link" %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="app-home__meta">No approvals are waiting right now.</p>
+      <% end %>
+    </section>
+  </div>
+
+  <div class="app-home__grid">
+    <section class="app-panel">
+      <div class="app-panel__header">
+        <div>
+          <p class="app-home__eyebrow">Recent Runs</p>
+          <h2>Activity</h2>
+        </div>
+      </div>
+
+      <% if @recent_runs.any? %>
+        <ul class="app-list">
+          <% @recent_runs.each do |run| %>
+            <li>
+              <div>
+                <strong><%= run.name %></strong>
+                <span><%= run.status.to_s.humanize %> · <%= run.current_step || "not started" %></span>
+              </div>
+              <%= link_to "Inspect", "/rubot/admin/runs/#{run.id}", class: "app-inline-link" %>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="app-home__meta">No operation runs yet.</p>
+      <% end %>
+    </section>
+
+    <section class="app-panel">
+      <div class="app-panel__header">
+        <div>
+          <p class="app-home__eyebrow">Settings</p>
+          <h2>Workspace Settings</h2>
+        </div>
+      </div>
+
+      <div class="app-card">
+        <h3>Provider</h3>
+        <p>
+          <%= ENV["GEMINI_API_KEY"].to_s.strip == "" ? "Heuristic fallback mode" : "Gemini via RubyLLM" %>
+        </p>
+      </div>
+
+      <div class="app-card">
+        <h3>Model</h3>
+        <p><%= ENV.fetch("RUBOT_MODEL", "gemini-2.5-flash") %></p>
+      </div>
+    </section>
+  </div>
+</section>

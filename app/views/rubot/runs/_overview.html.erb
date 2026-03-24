@@ -1,13 +1,10 @@
-<article class="rubot-panel" id="<%= Rubot::LiveUpdates.run_overview_dom_id(run.id) %>">
-  <h2>Overview</h2>
-  <dl class="rubot-kv">
-    <dt>Status</dt>
-    <dd><%= rubot_status_badge(run.run.status) %></dd>
-    <dt>Current step</dt>
-    <dd><%= run.current_step %></dd>
-    <dt>Started</dt>
-    <dd><%= run.started_at %></dd>
-    <dt>Completed</dt>
-    <dd><%= run.completed_at %></dd>
-  </dl>
-</article>
+<div id="<%= Rubot::LiveUpdates.run_overview_dom_id(run.id) %>">
+  <%= render "rubot/shared/detail_panel",
+             title: "Overview",
+             badge: rubot_status_badge(run.run.status),
+             items: [
+               { label: "Current step", value: run.current_step },
+               { label: "Started", value: run.started_at },
+               { label: "Completed", value: run.completed_at }
+             ] %>
+</div>

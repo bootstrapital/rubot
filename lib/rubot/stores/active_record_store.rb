@@ -44,6 +44,69 @@ module Rubot
         all_runs.select(&:waiting_for_approval?)
       end
 
+      def find_runs_for_subject(subject)
+        ensure_active_record!
+
+        reference = Rubot::Subject.reference(subject)
+        return [] unless reference
+
+        Rubot::RunRecord.includes(:event_records, :tool_call_records, :approval_records)
+                        .where(subject_type: reference.type, subject_id: reference.id)
+                        .order(started_at: :desc, created_at: :desc)
+                        .map { |record| hydrate_run(record) }
+      end
+
+      def claim_run_execution(run_or_id)
+        ensure_active_record!
+
+        run_id = run_or_id.respond_to?(:id) ? run_or_id.id : run_or_id
+        claimed_run = nil
+
+        ActiveRecord::Base.transaction do
+          record = Rubot::RunRecord.lock.find_by(id: run_id)
+          return nil unless record
+          return nil if terminal_status?(record.status)
+          return nil if record.execution_claim_token.present?
+
+          guard_subject_concurrency!(record)
+
+          record.execution_claim_token = SecureRandom.uuid
+          record.execution_claimed_at = Rubot.configuration.time_source.call
+          record.save!
+
+          claimed_run = hydrate_run(record.reload)
+          claimed_run.execution_claim_token = record.execution_claim_token
+          claimed_run.execution_claimed_at = record.execution_claimed_at
+        end
+
+        claimed_run
+      rescue ActiveRecord::StaleObjectError => e
+        raise Rubot::ConcurrencyError, e.message
+      end
+
+      def release_run_execution(run)
+        ensure_active_record!
+        return run unless run&.execution_claim_token
+
+        ActiveRecord::Base.transaction do
+          record = Rubot::RunRecord.lock.find_by(id: run.id)
+          return run unless record
+          return run unless record.execution_claim_token == run.execution_claim_token
+
+          record.execution_claim_token = nil
+          record.execution_claimed_at = nil
+          record.save!
+        end
+
+        run.execution_claim_token = nil
+        run.execution_claimed_at = nil
+        run
+      end
+
+      def execution_claims_supported?
+        true
+      end
+
       private
 
       def ensure_active_record!
@@ -63,6 +126,12 @@ module Rubot
         record.state_payload = run.state
         record.output_payload = run.output
         record.error_payload = run.error
+        record.correlation_id = run.trace_id
+        record.replay_of_run_id = run.replay_of_run_id
+        record.cancellation_requested_at = run.cancellation_requested_at
+        record.canceled_at = run.canceled_at
+        record.execution_claim_token = run.execution_claim_token
+        record.execution_claimed_at = run.execution_claimed_at
         record.started_at = run.started_at
         record.completed_at = run.completed_at
       end
@@ -122,6 +191,8 @@ module Rubot
 
         kind = record.workflow_name ? :workflow : :agent
         name = record.workflow_name || record.agent_name
+        subject_reference = Rubot::Subject::Reference.new(type: record.subject_type, id: record.subject_id) if record.subject_type && record.subject_id
+        subject = Rubot::Subject.resolve(subject_reference)
 
         Rubot::Run.restore(
           id: record.id,
@@ -129,11 +200,18 @@ module Rubot
           kind: kind,
           input: deep_symbolize(record.input_payload || {}),
           context: deep_symbolize(record.context_payload || {}),
-          subject: nil,
+          subject: subject,
+          subject_ref: subject_reference,
           status: record.status.to_sym,
           state: deep_symbolize(record.state_payload || {}),
           output: deep_symbolize(record.output_payload),
           error: deep_symbolize(record.error_payload),
+          trace_id: record.correlation_id,
+          replay_of_run_id: record.replay_of_run_id,
+          cancellation_requested_at: record.cancellation_requested_at,
+          canceled_at: record.canceled_at,
+          execution_claim_token: record.execution_claim_token,
+          execution_claimed_at: record.execution_claimed_at,
           current_step: record.current_step&.to_sym,
           started_at: record.started_at,
           completed_at: record.completed_at,
@@ -183,6 +261,22 @@ module Rubot
         else
           value
         end
+      end
+
+      def terminal_status?(status)
+        %w[completed failed canceled].include?(status.to_s)
+      end
+
+      def guard_subject_concurrency!(record)
+        return if record.subject_type.to_s.empty? || record.subject_id.to_s.empty?
+
+        conflict = Rubot::RunRecord.lock.where(subject_type: record.subject_type, subject_id: record.subject_id)
+                                   .where.not(id: record.id)
+                                   .where(status: %w[queued running waiting_for_approval])
+                                   .exists?
+        return unless conflict
+
+        raise Rubot::ConcurrencyError, "Another Rubot run is already active for #{record.subject_type}(#{record.subject_id})"
       end
     end
   end

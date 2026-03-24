@@ -7,7 +7,12 @@ require "time"
 require_relative "rubot/version"
 require_relative "rubot/errors"
 require_relative "rubot/configuration"
+require_relative "rubot/metrics"
+require_relative "rubot/subject"
+require_relative "rubot/memory"
+require_relative "rubot/policy"
 require_relative "rubot/schema"
+require_relative "rubot/eval"
 require_relative "rubot/step_definition"
 require_relative "rubot/event"
 require_relative "rubot/approval"
@@ -15,13 +20,17 @@ require_relative "rubot/run"
 require_relative "rubot/live_updates"
 require_relative "rubot/dsl"
 require_relative "rubot/middleware"
+require_relative "rubot/agent_resolution_context"
 require_relative "rubot/trigger"
 require_relative "rubot/tool"
+require_relative "rubot/tools/file_actions"
 require_relative "rubot/agent"
 require_relative "rubot/workflow"
 require_relative "rubot/operation"
+require_relative "rubot/playground"
 require_relative "rubot/executor"
 require_relative "rubot/async"
+require_relative "rubot/mcp"
 require_relative "rubot/providers/base"
 require_relative "rubot/providers/result"
 require_relative "rubot/providers/ruby_llm"
@@ -59,16 +68,28 @@ module Rubot
       configuration.provider
     end
 
-    def run(workflow_or_agent, input: {}, subject: nil, context: {})
-      Executor.new.call(workflow_or_agent, input: input, subject: subject, context: context)
+    def run(workflow_or_agent, input: {}, subject: nil, context: {}, trace_id: nil, replay_of_run_id: nil)
+      Executor.new.call(workflow_or_agent, input: input, subject: subject, context: context, trace_id:, replay_of_run_id:)
     end
 
-    def enqueue(workflow_or_agent, input: {}, subject: nil, context: {})
-      Async.enqueue(workflow_or_agent, input:, subject:, context:)
+    def run_for(subject, workflow_or_agent, input: {}, context: {}, trace_id: nil, replay_of_run_id: nil)
+      run(workflow_or_agent, input:, subject:, context:, trace_id:, replay_of_run_id:)
+    end
+
+    def enqueue(workflow_or_agent, input: {}, subject: nil, context: {}, trace_id: nil, replay_of_run_id: nil)
+      Async.enqueue(workflow_or_agent, input:, subject:, context:, trace_id:, replay_of_run_id:)
+    end
+
+    def enqueue_for(subject, workflow_or_agent, input: {}, context: {}, trace_id: nil, replay_of_run_id: nil)
+      enqueue(workflow_or_agent, input:, subject:, context:, trace_id:, replay_of_run_id:)
     end
 
     def resume_later(run_or_id)
       Async.resume_later(run_or_id)
+    end
+
+    def replay(run_or_id)
+      Executor.new.replay(run_or_id)
     end
   end
 end

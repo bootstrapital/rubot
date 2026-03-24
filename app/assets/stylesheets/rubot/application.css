@@ -1,9 +1,87 @@
-.rubot-page {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: #111827;
-  background: linear-gradient(180deg, #fcfbf7 0%, #f5efe4 100%);
+:root {
+  --rubot-font-body: "IBM Plex Sans", "Avenir Next", sans-serif;
+  --rubot-font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --rubot-color-ink: #111827;
+  --rubot-color-muted: #6b7280;
+  --rubot-color-panel: rgba(255, 255, 255, 0.88);
+  --rubot-color-shell: #f7f1e6;
+  --rubot-color-shell-edge: #eadfca;
+  --rubot-color-accent: #9a3412;
+  --rubot-color-accent-soft: #ffedd5;
+  --rubot-color-info: #dbeafe;
+  --rubot-color-info-ink: #1d4ed8;
+  --rubot-color-success: #dcfce7;
+  --rubot-color-success-ink: #166534;
+  --rubot-color-warning: #fef3c7;
+  --rubot-color-warning-ink: #92400e;
+  --rubot-color-danger: #fee2e2;
+  --rubot-color-danger-ink: #b91c1c;
+  --rubot-space-2: 0.5rem;
+  --rubot-space-3: 0.75rem;
+  --rubot-space-4: 1rem;
+  --rubot-space-6: 1.5rem;
+  --rubot-space-8: 2rem;
+  --rubot-radius-lg: 18px;
+  --rubot-radius-md: 16px;
+  --rubot-shadow: 0 12px 32px rgba(120, 53, 15, 0.08);
+  --rubot-motion-fast: 140ms;
+}
+
+.rubot-shell {
+  margin: 0;
   min-height: 100vh;
-  padding: 2rem;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  background: linear-gradient(180deg, #fcfbf7 0%, #f5efe4 100%);
+}
+
+.rubot-shell__sidebar {
+  padding: var(--rubot-space-8);
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  color: white;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rubot-shell__brand h1 {
+  margin: 0;
+  font-family: var(--rubot-font-body);
+}
+
+.rubot-shell__caption {
+  color: var(--rubot-color-muted);
+  max-width: 56ch;
+}
+
+.rubot-shell__nav {
+  margin-top: var(--rubot-space-8);
+  display: grid;
+  gap: var(--rubot-space-2);
+}
+
+.rubot-shell__nav-link {
+  display: block;
+  padding: var(--rubot-space-3) var(--rubot-space-4);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  transition: background var(--rubot-motion-fast) ease, color var(--rubot-motion-fast) ease;
+}
+
+.rubot-shell__nav-link:hover,
+.rubot-shell__nav-link--active {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.rubot-shell__main {
+  min-width: 0;
+}
+
+.rubot-page {
+  font-family: var(--rubot-font-body);
+  color: var(--rubot-color-ink);
+  min-height: 100vh;
+  padding: var(--rubot-space-8);
 }
 
 .rubot-page__header,
@@ -12,6 +90,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.rubot-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .rubot-eyebrow {
@@ -28,13 +113,27 @@
   margin: 1rem 0;
 }
 
+.rubot-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.rubot-workbench__main,
+.rubot-workbench__side {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
 .rubot-panel,
 .rubot-table-wrap {
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid #e5dcc9;
-  border-radius: 18px;
-  padding: 1rem;
-  box-shadow: 0 12px 32px rgba(120, 53, 15, 0.08);
+  background: var(--rubot-color-panel);
+  border: 1px solid var(--rubot-color-shell-edge);
+  border-radius: var(--rubot-radius-lg);
+  padding: var(--rubot-space-4);
+  box-shadow: var(--rubot-shadow);
 }
 
 .rubot-panel--danger {
@@ -93,18 +192,18 @@
   text-transform: uppercase;
 }
 
-.rubot-badge--running { background: #dbeafe; color: #1d4ed8; }
-.rubot-badge--waiting-for-approval { background: #fef3c7; color: #92400e; }
-.rubot-badge--completed { background: #dcfce7; color: #166534; }
-.rubot-badge--failed { background: #fee2e2; color: #b91c1c; }
+.rubot-badge--running { background: var(--rubot-color-info); color: var(--rubot-color-info-ink); }
+.rubot-badge--waiting-for-approval { background: var(--rubot-color-warning); color: var(--rubot-color-warning-ink); }
+.rubot-badge--completed { background: var(--rubot-color-success); color: var(--rubot-color-success-ink); }
+.rubot-badge--failed { background: var(--rubot-color-danger); color: var(--rubot-color-danger-ink); }
 .rubot-badge--queued { background: #e5e7eb; color: #374151; }
-.rubot-badge--warning { background: #ffedd5; color: #9a3412; }
-.rubot-badge--confidence-high { background: #dcfce7; color: #166534; }
-.rubot-badge--confidence-medium { background: #fef3c7; color: #92400e; }
-.rubot-badge--confidence-low { background: #fee2e2; color: #b91c1c; }
+.rubot-badge--warning { background: var(--rubot-color-accent-soft); color: var(--rubot-color-accent); }
+.rubot-badge--confidence-high { background: var(--rubot-color-success); color: var(--rubot-color-success-ink); }
+.rubot-badge--confidence-medium { background: var(--rubot-color-warning); color: var(--rubot-color-warning-ink); }
+.rubot-badge--confidence-low { background: var(--rubot-color-danger); color: var(--rubot-color-danger-ink); }
 
 .rubot-link {
-  color: #9a3412;
+  color: var(--rubot-color-accent);
   text-decoration: none;
   font-weight: 700;
 }
@@ -156,9 +255,9 @@ pre {
 }
 
 .rubot-card {
-  border: 1px solid #eadfca;
-  border-radius: 16px;
-  padding: 1rem;
+  border: 1px solid var(--rubot-color-shell-edge);
+  border-radius: var(--rubot-radius-md);
+  padding: var(--rubot-space-4);
   background: rgba(255, 252, 245, 0.92);
 }
 
@@ -167,14 +266,163 @@ pre {
   align-items: start;
   justify-content: space-between;
   gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .rubot-card__meta {
-  color: #6b7280;
+  color: var(--rubot-color-muted);
   font-size: 0.9rem;
+}
+
+.rubot-card__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: #92400e;
+  margin: 0 0 0.25rem;
+}
+
+.rubot-detail-body,
+.rubot-action-panel__content {
+  display: grid;
+  gap: 1rem;
+}
+
+.rubot-schema-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.rubot-schema-field {
+  border: 1px solid var(--rubot-color-shell-edge);
+  border-radius: var(--rubot-radius-md);
+  padding: var(--rubot-space-4);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.rubot-schema-field h3 {
+  margin-top: 0;
+}
+
+.rubot-form-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.rubot-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.rubot-form-stack {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.rubot-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.rubot-field--full {
+  grid-column: 1 / -1;
+}
+
+.rubot-field select {
+  width: 100%;
+  border: 1px solid #d6c4a7;
+  border-radius: 12px;
+  padding: 0.75rem;
+  font: inherit;
+  background: white;
+}
+
+.rubot-field--actions {
+  align-items: end;
+}
+
+.rubot-diff-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.rubot-diff {
+  border: 1px solid var(--rubot-color-shell-edge);
+  border-radius: var(--rubot-radius-md);
+  padding: var(--rubot-space-4);
+}
+
+.rubot-diff__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
 .rubot-empty-state {
   padding: 2rem;
   text-align: center;
+}
+
+.rubot-alert {
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+}
+
+.rubot-alert--error {
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1px solid #fecdd3;
+}
+
+.rubot-stat {
+  padding: var(--rubot-space-4);
+  border-radius: var(--rubot-radius-md);
+  border: 1px solid var(--rubot-color-shell-edge);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--rubot-shadow);
+}
+
+.rubot-stat__label {
+  margin: 0 0 var(--rubot-space-2);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rubot-color-muted);
+}
+
+.rubot-stat__value {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.rubot-stat--info {
+  background: linear-gradient(180deg, #eef6ff 0%, white 100%);
+}
+
+.rubot-stat--warning {
+  background: linear-gradient(180deg, #fffbeb 0%, white 100%);
+}
+
+.rubot-stat--danger {
+  background: linear-gradient(180deg, #fef2f2 0%, white 100%);
+}
+
+@media (max-width: 960px) {
+  .rubot-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .rubot-shell__sidebar {
+    padding: var(--rubot-space-6);
+  }
+
+  .rubot-workbench,
+  .rubot-diff__grid {
+    grid-template-columns: 1fr;
+  }
 }

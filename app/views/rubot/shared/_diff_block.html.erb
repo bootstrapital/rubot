@@ -1,0 +1,34 @@
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <% if local_assigns[:meta] %>
+      <span class="rubot-card__meta"><%= meta %></span>
+    <% end %>
+  </div>
+
+  <% rows = rubot_diff_rows(before_value, after_value) %>
+  <% if rows.any? %>
+    <div class="rubot-diff-list">
+      <% rows.each do |row| %>
+        <section class="rubot-diff rubot-diff--<%= row[:status] %>">
+          <div class="rubot-card__header">
+            <h3><%= row[:key] %></h3>
+            <span class="rubot-badge rubot-badge--<%= row[:status] == :changed ? "warning" : row[:status] == :added ? "completed" : row[:status] == :removed ? "failed" : "queued" %>"><%= row[:status] %></span>
+          </div>
+          <div class="rubot-diff__grid">
+            <div>
+              <p class="rubot-card__meta">Before</p>
+              <pre><%= rubot_json(row[:before]) %></pre>
+            </div>
+            <div>
+              <p class="rubot-card__meta">After</p>
+              <pre><%= rubot_json(row[:after]) %></pre>
+            </div>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "rubot/runs/empty_state", title: "No comparable fields", body: "This block highlights changes when before and after payloads share keys." %>
+  <% end %>
+</article>

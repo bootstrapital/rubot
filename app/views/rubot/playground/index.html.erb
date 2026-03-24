@@ -1,0 +1,85 @@
+<section class="rubot-page-header">
+  <div>
+    <p class="rubot-eyebrow">Developer Playground</p>
+    <h1>Run tools, agents, and workflows against fixture input.</h1>
+    <p class="rubot-shell__caption">This is a lightweight local surface for exercising Rubot primitives without writing one-off scripts.</p>
+  </div>
+</section>
+
+<div class="rubot-card">
+  <div class="rubot-card__header">
+    <div>
+      <p class="rubot-card__eyebrow">Invocation</p>
+      <h2>Configure a playground run</h2>
+    </div>
+  </div>
+
+  <%= form_with url: rubot.playground_index_path, method: :get, local: true, class: "rubot-form-grid" do |form| %>
+    <div class="rubot-field">
+      <%= form.label :kind, "Type" %>
+      <%= form.select :kind, options_for_select([["Tool", "tool"], ["Agent", "agent"], ["Workflow", "workflow"]], @kind.to_s) %>
+    </div>
+
+    <div class="rubot-field">
+      <%= form.label :class_name, "Class" %>
+      <%= form.select :class_name, options_for_select(@available.map { |klass| [klass.name, klass.name] }, @class_name) %>
+    </div>
+
+    <div class="rubot-field">
+      <%= form.label :fixture, "Fixture" %>
+      <%= form.select :fixture, options_for_select(@fixtures.map { |fixture| [fixture[:name].to_s.humanize, fixture[:name]] }, params[:fixture]) %>
+    </div>
+
+    <div class="rubot-field rubot-field--actions">
+      <%= form.submit "Load Fixture", class: "rubot-button rubot-button--secondary" %>
+    </div>
+  <% end %>
+
+  <% if @runnable %>
+    <%= form_with url: rubot.playground_index_path, method: :post, local: true, class: "rubot-form-stack" do |form| %>
+      <%= form.hidden_field :kind, value: @kind %>
+      <%= form.hidden_field :class_name, value: @class_name %>
+
+      <div class="rubot-form-grid">
+        <div class="rubot-field rubot-field--full">
+          <%= form.label :input_json, "Input JSON" %>
+          <%= form.text_area :input_json, value: @input_json, rows: 10 %>
+        </div>
+
+        <div class="rubot-field">
+          <%= form.label :context_json, "Context JSON" %>
+          <%= form.text_area :context_json, value: @context_json, rows: 8 %>
+        </div>
+
+        <div class="rubot-field">
+          <%= form.label :subject_json, "Subject JSON" %>
+          <%= form.text_area :subject_json, value: @subject_json, rows: 8 %>
+        </div>
+      </div>
+
+      <div class="rubot-field rubot-field--actions">
+        <%= form.submit "Run in Playground", class: "rubot-button" %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <% if @error_message.present? %>
+    <div class="rubot-alert rubot-alert--error">
+      <strong>Execution failed:</strong>
+      <span><%= @error_message %></span>
+    </div>
+  <% end %>
+</div>
+
+<% if @result %>
+  <div class="rubot-workbench">
+    <section class="rubot-workbench__main">
+      <%= render "rubot/runs/trace_viewer", run: @result %>
+    </section>
+
+    <aside class="rubot-workbench__side">
+      <%= render "rubot/runs/overview", run: @result %>
+      <%= render "rubot/runs/metrics", run: @result %>
+    </aside>
+  </div>
+<% end %>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rubot Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "rubot/application", media: "all" %>
+  </head>
+  <body class="rubot-shell">
+    <aside class="rubot-shell__sidebar">
+      <div class="rubot-shell__brand">
+        <p class="rubot-shell__eyebrow">Rubot</p>
+        <h1>Admin</h1>
+        <p class="rubot-shell__caption">Hybrid engine surface for operations, traces, and approvals.</p>
+      </div>
+
+      <nav class="rubot-shell__nav">
+        <% rubot_navigation.each do |item| %>
+          <%= rubot_nav_link(item, current_path: request.path) %>
+        <% end %>
+      </nav>
+    </aside>
+
+    <main class="rubot-shell__main">
+      <%= yield %>
+    </main>
+  </body>
+</html>

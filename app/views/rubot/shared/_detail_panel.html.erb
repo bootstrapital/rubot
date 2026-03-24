@@ -1,0 +1,29 @@
+<article class="rubot-panel <%= local_assigns[:panel_class] %>">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <% if local_assigns[:badge] %>
+      <%= badge %>
+    <% end %>
+  </div>
+
+  <% if local_assigns[:meta] %>
+    <p class="rubot-card__meta"><%= meta %></p>
+  <% end %>
+
+  <% if local_assigns[:badges] %>
+    <div class="rubot-badge-row"><%= badges %></div>
+  <% end %>
+
+  <% if local_assigns[:items] %>
+    <dl class="rubot-kv">
+      <% items.each do |item| %>
+        <dt><%= item[:label] %></dt>
+        <dd><%= item[:value] %></dd>
+      <% end %>
+    </dl>
+  <% end %>
+
+  <% if local_assigns[:body] %>
+    <div class="rubot-detail-body"><%= body %></div>
+  <% end %>
+</article>

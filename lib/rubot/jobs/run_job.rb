@@ -6,6 +6,7 @@ module Rubot
 
     def perform(run_id)
       run = load_run!(run_id)
+      return if run.cancel_requested? || run.canceled?
 
       case run.kind
       when :workflow

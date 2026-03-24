@@ -22,6 +22,13 @@ module Rubot
       def pending_approvals
         all_runs.select(&:waiting_for_approval?)
       end
+
+      def find_runs_for_subject(subject)
+        reference = Rubot::Subject.reference(subject)
+        return [] unless reference
+
+        all_runs.select { |run| run.subject_ref == reference }
+      end
     end
   end
 end

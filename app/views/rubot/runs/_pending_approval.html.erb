@@ -1,17 +1,22 @@
 <div id="<%= Rubot::LiveUpdates.run_pending_approval_dom_id(run.id) %>">
   <% if run.run.waiting_for_approval? %>
-    <article class="rubot-panel">
-      <h2>Pending approval</h2>
-      <%= form_with url: rubot.approve_approval_path(run.id), method: :patch, local: true, class: "rubot-form" do |form| %>
-        <%= form.label :approved_by %>
-        <%= form.text_field :approved_by, value: "operator" %>
-        <%= form.label :note %>
-        <%= form.text_area :note, rows: 3 %>
-        <%= form.submit "Approve", class: "rubot-button" %>
-      <% end %>
-      <div class="rubot-actions">
-        <%= button_to "Reject", rubot.reject_approval_path(run.id), method: :patch, params: { approved_by: "operator" }, class: "rubot-button rubot-button--secondary" %>
-      </div>
-    </article>
+    <% approval_form = capture do %>
+      <%= render "rubot/shared/schema_form",
+                 title: "Approval payload",
+                 meta: "Schema-driven form block",
+                 schema: Rubot::Schema.build { string :approved_by; string :note, required: false },
+                 url: rubot.approve_approval_path(run.id),
+                 method: :patch,
+                 values: { approved_by: "operator" },
+                 submit_label: "Approve" %>
+    <% end %>
+
+    <%= render "rubot/shared/action_panel",
+               title: "Pending approval",
+               description: "This action block can approve or reject the current workflow gate.",
+               content: approval_form %>
+    <div class="rubot-actions">
+      <%= button_to "Reject", rubot.reject_approval_path(run.id), method: :patch, params: { approved_by: "operator" }, class: "rubot-button rubot-button--secondary" %>
+    </div>
   <% end %>
 </div>

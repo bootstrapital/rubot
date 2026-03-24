@@ -1,18 +1,13 @@
 <div id="<%= Rubot::LiveUpdates.approvals_inbox_dom_id %>">
-  <% if approvals.any? %>
-    <table class="rubot-table">
-      <thead>
-        <tr>
-          <th>Run</th>
-          <th>Step</th>
-          <th>Role</th>
-          <th>Reason</th>
-          <th></th>
-        </tr>
-      </thead>
-      <%= render "inbox", approvals: approvals %>
-    </table>
-  <% else %>
-    <%= render "rubot/runs/empty_state", title: "Approval inbox is clear", body: "Pending approval requests will appear here as runs reach human review steps." %>
-  <% end %>
+  <%= render "rubot/shared/data_table",
+             rows: approvals,
+             columns: [
+               { label: "Run", value: ->(approval) { link_to approval.run_name, rubot.run_path(approval.run_id), class: "rubot-link" } },
+               { label: "Step", key: :step_name },
+               { label: "Role", key: :role_requirement },
+               { label: "Reason", key: :reason },
+               { label: "Action", value: ->(approval) { link_to "Review", rubot.run_path(approval.run_id), class: "rubot-link" } }
+             ],
+             empty_title: "Approval inbox is clear",
+             empty_body: "Pending approval requests will appear here as runs reach human review steps." %>
 </div>

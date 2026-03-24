@@ -9,6 +9,13 @@ The anchor idea is:
 - `Agent` is the reasoning primitive.
 - `Tool` is the explicit action primitive.
 
+In Rails terms, that does **not** mean `Operation` replaces controllers, routes, or app views.
+The desired model is:
+
+- the Rails app owns request handling, page composition, uploads, auth, and surrounding product UI
+- the `Operation` owns the business/runtime feature boundary
+- the Rubot admin surface owns cross-operation inspection and governance
+
 ## Design Intent
 
 Rubot should let developers build internal software with AI the same way they build normal application features:
@@ -22,11 +29,13 @@ Rubot should let developers build internal software with AI the same way they bu
 
 For small use cases, that should fit in one place. For larger systems, the same concepts should split cleanly into separate files and modules.
 
+Rubot should therefore feel like a Rails extension, not a parallel application framework.
+
 ## Core Nouns
 
 ### Operation
 
-An `Operation` is the full developer-facing unit for a Rubot feature.
+An `Operation` is the business and runtime feature boundary for a Rubot feature.
 
 An operation may own:
 
@@ -44,7 +53,6 @@ An operation answers:
 
 - what is this internal tool or workflow feature?
 - how does it start?
-- what does the operator see?
 - what logic and reasoning are involved?
 
 Example mental model:
@@ -54,6 +62,8 @@ Example mental model:
 - `InvoiceIntakeOperation`
 
 An operation is larger than a workflow. It is the feature boundary.
+
+An operation is **not** the same thing as the full Rails UI surface. In a Rails app, the operation should usually be invoked from normal controllers, routes, and views.
 
 ### Workflow
 
@@ -224,6 +234,14 @@ Examples:
 
 This is important because webhooks, queues, and cron should be thought of as operation ingress, not disconnected plumbing.
 
+In a Rails app, that often means:
+
+- a controller action triggers an operation
+- a webhook endpoint triggers an operation
+- a job or schedule triggers an operation
+
+The ingress is Rails-native; the unit of work is the operation.
+
 ### Subject
 
 A `Subject` is the application record or business entity the operation is attached to.
@@ -250,7 +268,60 @@ Examples:
 - subject-side embedded panel
 - admin console workbench
 
-The desired state is that UI belongs to the operation model, not as an afterthought.
+The desired state is that operation-facing UI is associated with the operation model, not treated as an afterthought.
+
+But this should not be read as “the operation owns all Rails rendering.” The better Rails pattern is:
+
+- app controllers and routes compose product-facing UI
+- those app surfaces invoke operations
+- the operation remains the source of truth for execution
+- the Rubot admin UI remains a separate governance surface
+
+So there are two distinct UI concerns:
+
+- operation-facing app UI: start forms, embedded panels, subject pages, domain workflows
+- admin/governance UI: runs, approvals, replay, traces, metrics, cross-operation inspection
+
+Those can live in the same Rails app, but they should remain conceptually distinct.
+
+### Controller
+
+A Rails `Controller` is still the request/response composition layer.
+
+Controllers answer:
+
+- what route is being served?
+- what params or uploads are accepted?
+- what app-facing view should render?
+- which operation should be invoked?
+
+Controllers should remain responsible for:
+
+- request parsing
+- file upload handling
+- auth hooks
+- redirect/render behavior
+- page composition
+
+Controllers should not become the hidden home for agent logic, tool logic, or workflow orchestration. That logic belongs in tools, agents, workflows, and operations.
+
+### Admin Surface
+
+The Rubot admin surface is the governance and inspection UI.
+
+It answers:
+
+- what runs exist across operations?
+- what approvals are waiting?
+- what happened during execution?
+- how do I replay, inspect, and debug a run?
+
+The admin surface is intentionally different from product-facing operation UI.
+
+Good mental split:
+
+- `/ops/...` or other app routes: do the work
+- `/rubot/admin/...`: inspect and govern the work
 
 ## Core Verbs
 

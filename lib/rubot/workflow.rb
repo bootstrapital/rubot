@@ -46,9 +46,11 @@ module Rubot
 
     def execute
       self.class.rubot_steps.each do |step_definition|
+        run.raise_if_canceled!
         run.current_step = step_definition.name
         run.add_event(Event.new(type: "step.entered", step_name: step_definition.name))
-        result = execute_step(step_definition)
+        result = execute_or_resume_step(step_definition)
+        checkpoint_step(step_definition, result) unless run.waiting_for_approval?
         run.add_event(Event.new(type: "step.exited", step_name: step_definition.name, payload: { result: result })) unless run.waiting_for_approval?
         return run if run.waiting_for_approval? || run.failed?
       end
@@ -64,9 +66,11 @@ module Rubot
       remaining_steps = self.class.rubot_steps[(start_index + 1)..] || []
 
       remaining_steps.each do |step_definition|
+        run.raise_if_canceled!
         run.current_step = step_definition.name
         run.add_event(Event.new(type: "step.entered", step_name: step_definition.name))
-        result = execute_step(step_definition)
+        result = execute_or_resume_step(step_definition)
+        checkpoint_step(step_definition, result) unless run.waiting_for_approval?
         run.add_event(Event.new(type: "step.exited", step_name: step_definition.name, payload: { result: result })) unless run.waiting_for_approval?
         return run if run.waiting_for_approval? || run.failed?
       end
@@ -78,6 +82,21 @@ module Rubot
     end
 
     private
+
+    def execute_or_resume_step(step_definition)
+      if run.step_completed?(step_definition.name)
+        run.add_event(
+          Event.new(
+            type: "step.resumed_from_checkpoint",
+            step_name: step_definition.name,
+            payload: { checkpoint: run.checkpoint_for(step_definition.name) }
+          )
+        )
+        return checkpoint_output(step_definition)
+      end
+
+      execute_step(step_definition)
+    end
 
     def execute_step(step_definition)
       case step_definition.kind
@@ -139,6 +158,7 @@ module Rubot
       )
       run.add_approval(approval) unless run.approvals.include?(approval)
       run.wait_for_approval!
+      run.checkpoint!(step_name: step_definition.name, kind: step_definition.kind, status: :waiting_for_approval, payload: approval.to_h)
       run.add_event(Event.new(type: "approval.requested", step_name: step_definition.name, payload: approval.to_h))
       nil
     end
@@ -160,6 +180,22 @@ module Rubot
       key = step_definition.options[:save_as] || step_definition.name
       run.state[key] = output
       run.output = output
+    end
+
+    def checkpoint_step(step_definition, result)
+      run.checkpoint!(step_name: step_definition.name, kind: step_definition.kind, status: :completed, payload: { result: result })
+      run.add_event(
+        Event.new(
+          type: "step.checkpointed",
+          step_name: step_definition.name,
+          payload: run.checkpoint_for(step_definition.name)
+        )
+      )
+    end
+
+    def checkpoint_output(step_definition)
+      key = step_definition.options[:save_as] || step_definition.name
+      run.state[key]
     end
 
     def resume_index

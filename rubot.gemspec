@@ -5,12 +5,12 @@ require_relative "lib/rubot/version"
 Gem::Specification.new do |spec|
   spec.name = "rubot"
   spec.version = Rubot::VERSION
-  spec.authors = ["OpenAI Codex"]
-  spec.email = ["support@example.com"]
+  spec.authors = ["Chris Davis"]
+  spec.email = ["chris@bootstrapital.com"]
 
   spec.summary = "Rails-native framework for agentic internal tools"
   spec.description = "Rubot provides agent, tool, and workflow primitives for building operator-facing AI workflows in Ruby and Rails."
-  spec.homepage = "https://example.com/rubot"
+  spec.homepage = "https://rubot.pdt.dev"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
 
@@ -26,4 +26,5 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
   spec.add_dependency "json"
+  spec.add_development_dependency "rake"
 end

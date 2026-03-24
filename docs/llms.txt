@@ -1,0 +1,441 @@
+Rubot LLM Guide
+================
+
+Purpose
+-------
+
+This file explains how a coding assistant or language model should work effectively with Rubot.
+It is intentionally practical. Use it to understand Rubot's mental model, preferred architecture,
+Rails integration shape, and the patterns that lead to good implementations.
+
+Rubot is a Rails-native framework for building agentic internal software with:
+
+- typed tools
+- reasoning agents
+- durable workflows
+- approvals and human oversight
+- persistent runs, events, and tool calls
+- admin inspection, replay, and evals
+
+Rubot should feel like a Rails extension, not a separate app platform.
+
+
+Core Mental Model
+-----------------
+
+Think in four layers:
+
+- Tool: explicit application action
+- Agent: reasoning participant
+- Workflow: execution graph and step orchestration
+- Operation: business feature boundary
+
+The most important distinction:
+
+- Operation is the product/runtime feature boundary
+- Workflow is the orchestration graph inside an operation
+
+Do not collapse those concepts together.
+
+
+Rails Boundary
+--------------
+
+Rubot does not replace Rails MVC.
+
+In a Rails app:
+
+- routes/controllers/views own request handling and page composition
+- uploads, auth, and product navigation remain normal Rails concerns
+- operations/workflows/tools/agents hold execution logic
+- Rubot admin is a separate governance surface
+
+Use this split:
+
+- `/ops/...` or other app routes: start and interact with product-facing operations
+- `/rubot/admin/...`: inspect runs, approvals, traces, replay, and governance
+
+If you generate example code, prefer a host-app shape like:
+
+- `app/operations`
+- `app/workflows`
+- `app/agents`
+- `app/tools`
+- app controllers and views that invoke operations
+
+Do not imply that every operation should own its own magical self-contained UI framework.
+The host Rails app should remain first-class.
+
+
+Desired Authoring Style
+-----------------------
+
+For small features:
+
+- one operation may be the feature boundary
+- it may compose one workflow, one agent, and a few tools
+- the surrounding Rails controller/view should stay thin
+
+For larger features:
+
+- split tools, agents, workflows, and operations into separate files
+- keep shared tools/agents reusable across operations
+- keep operations focused on business intent, not generic plumbing
+
+When writing examples, show the visible Rails extension story. Prefer files in app directories over
+hiding everything in initializers.
+
+
+What Rubot Is Good At
+---------------------
+
+Rubot is strongest when the problem needs one or more of:
+
+- durable execution
+- resumable background work
+- approvals and human checkpoints
+- auditable tool usage
+- run inspection and replay
+- agent reasoning inside a larger Rails feature
+
+Rubot is less interesting for:
+
+- a single pure function with no runtime trace needs
+- simple CRUD with no workflow or agent behavior
+- generic chat UI without business process structure
+
+If the feature has no meaningful tool/action boundary, no need for human review, and no need for
+run inspection, plain Rails services may be simpler.
+
+
+Preferred Abstractions
+----------------------
+
+Use the most specific Rubot primitive that matches the job.
+
+Prefer `Rubot::Tool` when:
+
+- code performs a concrete action
+- you want typed inputs and outputs
+- the action should be auditable
+- the action may later be exposed to an agent
+
+Prefer `Rubot::Agent` when:
+
+- the system needs model-based reasoning
+- the result is a recommendation, classification, summary, routing decision, or proposed action
+- model behavior should be constrained by schemas, tools, middleware, or memory shaping
+
+Prefer `Rubot::Workflow` when:
+
+- multiple steps must happen in sequence
+- the flow may pause or resume
+- approvals, branching, retries, or durable state matter
+
+Prefer `Rubot::Operation` when:
+
+- you are defining a user-facing or operator-facing business feature
+- one feature bundles a workflow, agents, tools, triggers, memory config, and policies
+- you want a stable top-level feature boundary in the app
+
+
+Current vs Desired State
+------------------------
+
+Rubot already has real runtime support for:
+
+- tools
+- agents
+- workflows
+- runs
+- approvals
+- events
+- provider-backed agents
+- async execution via jobs
+- replay
+- evals
+- a Rails admin engine
+- memory processors
+- dynamic agent resolution
+- middleware
+- MCP-backed tool integration
+
+Rubot's desired long-term shape also includes:
+
+- operation-first authoring as the clearest DX
+- richer trigger modeling
+- stronger operation-level UI contracts
+- more complete admin/governance experiences
+
+When generating code, favor the desired conceptual shape without pretending unsupported APIs exist.
+Be explicit about whether you are using current runtime capabilities or proposing a future DSL.
+
+
+Admin vs Product UI
+-------------------
+
+Keep these separate.
+
+Product-facing UI:
+
+- belongs to the host app
+- answers: how does a user start or interact with this feature?
+- often lives under `/ops/...`
+
+Admin/governance UI:
+
+- belongs to Rubot's engine
+- answers: what happened, what is waiting, what failed, how do we inspect or replay it?
+- typically lives under `/rubot/admin`
+
+Do not merge these concepts in docs or generated code.
+
+
+State and Observability
+-----------------------
+
+Rubot favors explicit state and traces.
+
+Important runtime objects:
+
+- `Rubot::Run`
+- `Rubot::Approval`
+- `Rubot::Event`
+- tool call records in the configured store
+
+When building workflows:
+
+- write step outputs into `run.state`
+- emit useful events
+- keep transitions inspectable
+- prefer explicit step boundaries over hidden side effects
+
+If you are implementing a feature and must choose between compactness and inspectability, choose
+inspectability.
+
+
+Memory Model
+------------
+
+Rubot separates:
+
+- durable history: canonical audit trail
+- model context: curated subset sent to the LLM
+
+This distinction is important.
+
+Do not mutate or truncate canonical run history just to fit a model context window.
+Instead, use memory processors to shape the model context.
+
+Current high-value processors include:
+
+- token limiting
+- filtering or compressing verbose tool-call history
+
+If you add new memory behavior, preserve full auditability and make context shaping explicit.
+
+
+Dynamic Agents
+--------------
+
+Rubot supports runtime resolution for some agent properties.
+
+Use this when model behavior should depend on run context, tenant, user, or subject.
+
+Good dynamic properties:
+
+- instructions
+- model
+- available tools
+
+Do not make agents dynamic in a way that hides behavior from operators. Favor inspectable resolution
+and eventing.
+
+
+Middleware
+----------
+
+Middleware is the perimeter around agent execution.
+
+Use middleware for:
+
+- authorization
+- prompt/input guardrails
+- redaction
+- policy enforcement
+- request shaping
+- logging
+
+Do not bury those concerns deep inside agent prompts when they are really runtime policy concerns.
+
+
+MCP
+---
+
+Rubot can ingest external MCP tools, but MCP should enter through Rubot's tool model.
+
+That means MCP-backed tools should still be:
+
+- normalized into Rubot-compatible tool surfaces
+- subject to middleware and policy
+- auditable as ordinary tool calls
+- visible in runs and admin traces
+
+Do not bypass Rubot governance by treating MCP as a separate execution plane.
+
+
+Provider Use
+------------
+
+Rubot currently supports provider-backed agents through `Rubot::Providers::RubyLLM`.
+
+When a provider is configured:
+
+- agents without custom `perform` implementations can use the model directly
+- schemas matter
+- tool access matters
+- memory and middleware still matter
+
+When no provider is configured:
+
+- deterministic Ruby implementations are acceptable and often useful for tests, demos, and fallback
+
+Prefer provider-backed reasoning for genuinely fuzzy/model tasks.
+Prefer plain Ruby for deterministic application logic.
+
+
+How to Model Features
+---------------------
+
+A strong Rubot feature usually looks like this:
+
+1. A Rails controller receives input or a trigger fires.
+2. The controller or job launches an operation or workflow.
+3. The workflow runs tools and agents.
+4. Human approval may pause execution.
+5. Runs, tool calls, and events are stored.
+6. The admin surface exposes the trace.
+
+For a small app feature:
+
+- one operation
+- one workflow
+- one agent
+- two or three tools
+
+is a good starting point.
+
+Do not start with a giant monolithic agent that does everything in a prompt.
+Break concrete actions out into tools.
+
+
+Sample Rails Shape
+------------------
+
+A good host app structure is:
+
+- `app/controllers/...`
+- `app/views/...`
+- `app/operations/...`
+- `app/workflows/...`
+- `app/agents/...`
+- `app/tools/...`
+
+For example:
+
+- `app/operations/resume_screener_operation.rb`
+- `app/workflows/resume_screener/workflow.rb`
+- `app/agents/resume_screener/screening_agent.rb`
+- `app/tools/resume_screener/load_job_description_tool.rb`
+
+This visibly communicates that Rubot extends Rails rather than replacing it.
+
+
+When Generating Code
+--------------------
+
+Prefer:
+
+- typed schemas
+- explicit tool boundaries
+- thin controllers
+- durable workflow state
+- operation-level feature grouping
+- small, composable classes
+- real app directories over initializer-only definitions
+
+Avoid:
+
+- stuffing all business logic into controllers
+- giant prompts that hide application actions
+- mixing product UI and admin UI concerns
+- mutating canonical history for context-window reasons
+- bypassing middleware or audit surfaces
+- inventing unsupported APIs without clearly marking them aspirational
+
+
+Documentation Priorities
+------------------------
+
+When explaining Rubot, emphasize:
+
+1. Rails-native composition
+2. Operation vs Workflow distinction
+3. Admin vs product UI distinction
+4. Typed tools and inspectable workflows
+5. Approvals, replay, evals, and governance
+
+When showing examples, favor business features over toy chatbots.
+
+
+Testing Priorities
+------------------
+
+Useful tests in Rubot typically cover:
+
+- tool schema and output behavior
+- agent behavior, including provider fallback when relevant
+- workflow pause/resume behavior
+- approval transitions
+- replay behavior
+- memory processor behavior
+- middleware behavior
+- presenter/admin JSON contracts
+
+If writing examples or framework code, prefer tests that validate observability and runtime state,
+not just raw return values.
+
+
+How To Help a User Best
+-----------------------
+
+If a user is building with Rubot, the most helpful guidance usually is:
+
+- identify the operation boundary
+- identify the workflow steps
+- extract explicit tools
+- decide where human approvals belong
+- keep the host app UI in Rails controllers/views
+- use Rubot admin for inspection, not as the main product UI
+
+If a user asks for architecture advice, anchor your answer in the desired-state model above.
+If a user asks for implementation help, stay within currently supported APIs unless you clearly
+label a proposal as future-looking.
+
+
+Short Version
+-------------
+
+Rubot is a Rails-native agentic workflow framework.
+
+Use:
+
+- controllers and views for app UI
+- operations for feature boundaries
+- workflows for orchestration
+- agents for reasoning
+- tools for explicit actions
+- `/ops/...` for doing the work
+- `/rubot/admin/...` for governing and inspecting the work
+
+Optimize for explicit boundaries, durable state, auditability, and Rails-native composition.

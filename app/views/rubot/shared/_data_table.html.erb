@@ -1,0 +1,24 @@
+<div class="rubot-table-wrap">
+  <% if rows.any? %>
+    <table class="rubot-table">
+      <thead>
+        <tr>
+          <% columns.each do |column| %>
+            <th><%= column[:label] %></th>
+          <% end %>
+        </tr>
+      </thead>
+      <tbody>
+        <% rows.each do |row| %>
+          <tr>
+            <% columns.each do |column| %>
+              <td><%= rubot_cell_value(row, column) %></td>
+            <% end %>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <%= render "rubot/runs/empty_state", title: empty_title, body: empty_body %>
+  <% end %>
+</div>

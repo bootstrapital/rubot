@@ -1,8 +1,6 @@
-<article class="rubot-panel" id="<%= Rubot::LiveUpdates.run_timeline_dom_id(run.id) %>">
-  <h2>Timeline</h2>
-  <ol class="rubot-timeline">
-    <% run.events.each do |event| %>
-      <%= render "event", event: event %>
-    <% end %>
-  </ol>
-</article>
+<div id="<%= Rubot::LiveUpdates.run_timeline_dom_id(run.id) %>">
+  <%= render "rubot/shared/timeline_block",
+             title: "Timeline",
+             meta: "#{run.events.length} events",
+             events: run.events %>
+</div>

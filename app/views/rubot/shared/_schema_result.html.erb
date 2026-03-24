@@ -1,0 +1,22 @@
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <% if local_assigns[:meta] %>
+      <span class="rubot-card__meta"><%= meta %></span>
+    <% end %>
+  </div>
+
+  <% pairs = rubot_schema_value_pairs(payload, schema) %>
+  <% if pairs.any? %>
+    <div class="rubot-schema-grid">
+      <% pairs.each do |pair| %>
+        <section class="rubot-schema-field">
+          <h3><%= pair[:label] %></h3>
+          <pre><%= rubot_json(pair[:value]) %></pre>
+        </section>
+      <% end %>
+    </div>
+  <% else %>
+    <%= render "rubot/runs/empty_state", title: "No structured data", body: "This block can render schema-backed results when data is available." %>
+  <% end %>
+</article>

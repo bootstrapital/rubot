@@ -61,6 +61,21 @@ module Rubot
       builder.to_schema
     end
 
+    def self.from_json_schema(schema)
+      normalized = schema || {}
+      properties = normalized[:properties] || normalized["properties"] || {}
+      required = Array(normalized[:required] || normalized["required"]).map(&:to_sym)
+
+      fields = properties.map do |name, field_schema|
+        field_schema = field_schema || {}
+        type = json_schema_type(field_schema[:type] || field_schema["type"])
+        item_type = json_schema_type((field_schema[:items] || field_schema["items"] || {})[:type] || (field_schema[:items] || field_schema["items"] || {})["type"])
+        Field.new(name: name.to_sym, type: type, required: required.include?(name.to_sym), item_type: item_type)
+      end
+
+      new(fields)
+    end
+
     def initialize(fields = [])
       @fields = fields
     end
@@ -104,6 +119,18 @@ module Rubot
     end
 
     private
+
+    def self.json_schema_type(type)
+      case type
+      when "string" then :string
+      when "integer" then :integer
+      when "number" then :float
+      when "boolean" then :boolean
+      when "object" then :hash
+      when "array" then :array
+      else :string
+      end
+    end
 
     def symbolize_hash(payload)
       payload.each_with_object({}) do |(key, value), memo|

@@ -7,6 +7,7 @@ module Rubot
     def perform(run_id)
       run = load_run!(run_id)
       raise ExecutionError, "ResumeRunJob only supports workflow runs" unless run.kind == :workflow
+      return if run.cancel_requested? || run.canceled?
 
       Rubot::StepJob.perform_later(run.id)
     end

@@ -1,0 +1,24 @@
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <% if local_assigns[:meta] %>
+      <span class="rubot-card__meta"><%= meta %></span>
+    <% end %>
+  </div>
+
+  <% if local_assigns[:description] %>
+    <p class="rubot-card__meta"><%= description %></p>
+  <% end %>
+
+  <% if local_assigns[:content] %>
+    <div class="rubot-action-panel__content"><%= content %></div>
+  <% end %>
+
+  <% if local_assigns[:actions] %>
+    <div class="rubot-actions">
+      <% actions.each do |action| %>
+        <%= action %>
+      <% end %>
+    </div>
+  <% end %>
+</article>

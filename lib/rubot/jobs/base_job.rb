@@ -8,8 +8,9 @@ end
 
 module Rubot
   class BaseJob < ActiveJob::Base
-    retry_on StandardError, wait: 1, attempts: -> { Rubot.configuration.job_retry_attempts }
+    retry_on Rubot::RetryableError, Rubot::ConcurrencyError, wait: 1, attempts: -> { Rubot.configuration.job_retry_attempts }
     discard_on Rubot::ApprovalRequired
+    discard_on Rubot::CancellationError
 
     private
 

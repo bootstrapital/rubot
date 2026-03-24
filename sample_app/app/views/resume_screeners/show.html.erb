@@ -1,0 +1,142 @@
+<section class="resume-demo">
+  <div class="resume-demo__hero">
+    <div>
+      <p class="resume-demo__eyebrow">Sample Operation</p>
+      <h1>Resume Screener</h1>
+      <p class="resume-demo__lede">
+        A small Rubot host app that defines a complete operation in one file and runs it against a selected job description and uploaded resume text.
+      </p>
+    </div>
+    <div class="resume-demo__links">
+      <%= link_to "Home", "/", class: "resume-demo__link resume-demo__link--muted" %>
+      <%= link_to "Open Rubot Admin", "/rubot/admin", class: "resume-demo__link" %>
+      <%= link_to "Playground", "/rubot/admin/playground", class: "resume-demo__link resume-demo__link--muted" %>
+    </div>
+  </div>
+
+  <div class="resume-demo__grid">
+    <section class="resume-card">
+      <h2>Submit Resume</h2>
+
+      <%= form_with url: resume_screener_path, method: :get, local: true, class: "resume-form resume-form--compact" do |form| %>
+        <div class="resume-form__field">
+          <%= form.label :job_id, "Job Description" %>
+          <%= form.select :job_id,
+                          options_for_select(@job_options, @selected_job_id),
+                          {},
+                          onchange: "this.form.requestSubmit()" %>
+        </div>
+      <% end %>
+
+      <%= form_with url: resume_screener_path, method: :post, multipart: true, local: true, class: "resume-form" do |form| %>
+        <%= form.hidden_field :job_id, value: @selected_job_id %>
+        <div class="resume-form__field">
+          <%= form.label :candidate_name, "Candidate Name" %>
+          <%= form.text_field :candidate_name, value: @candidate_name, placeholder: "Optional" %>
+        </div>
+
+        <div class="resume-form__field">
+          <%= form.label :resume_file, "Upload Resume (.txt or .md)" %>
+          <%= form.file_field :resume_file, accept: ".txt,.md,.text,text/plain,text/markdown" %>
+        </div>
+
+        <div class="resume-form__field">
+          <%= form.label :resume_text, "Or paste resume text" %>
+          <%= form.text_area :resume_text, value: @resume_text, rows: 18, placeholder: "Paste resume content here if you are not uploading a text file." %>
+        </div>
+
+        <%= form.submit "Screen Resume", class: "resume-demo__button" %>
+      <% end %>
+
+      <% if @error_message.present? %>
+        <div class="resume-demo__alert">
+          <strong>Unable to run screening:</strong>
+          <span><%= @error_message %></span>
+        </div>
+      <% end %>
+    </section>
+
+    <section class="resume-card resume-card--job">
+      <h2><%= @job_description[:title] %></h2>
+      <p class="resume-demo__meta"><%= @job_description[:team] %> · <%= @job_description[:location] %></p>
+      <p><%= @job_description[:summary] %></p>
+
+      <div class="resume-card__list-block">
+        <h3>Must-Haves</h3>
+        <ul>
+          <% @job_description[:must_haves].each do |item| %>
+            <li><%= item %></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <div class="resume-card__list-block">
+        <h3>Preferred</h3>
+        <ul>
+          <% @job_description[:preferred].each do |item| %>
+            <li><%= item %></li>
+          <% end %>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <% if @run %>
+    <% screening = @run.output[:finalize][:screening] %>
+    <section class="resume-card resume-card--result">
+      <div class="resume-demo__hero">
+        <div>
+          <p class="resume-demo__eyebrow">Run Result</p>
+          <h2><%= screening[:candidate_name] %></h2>
+          <p class="resume-demo__meta">Run ID <%= @run.id %> · Trace <%= @run.trace_id %></p>
+        </div>
+        <div class="resume-score">
+          <span class="resume-score__value"><%= (screening[:match_score].to_f * 100).round %>%</span>
+          <span class="resume-score__label"><%= screening[:recommendation].to_s.humanize %></span>
+        </div>
+      </div>
+
+      <p><%= screening[:summary] %></p>
+
+      <div class="resume-demo__grid resume-demo__grid--result">
+        <div class="resume-card__list-block">
+          <h3>Strengths</h3>
+          <ul>
+            <% screening[:strengths].each do |item| %>
+              <li><%= item %></li>
+            <% end %>
+          </ul>
+        </div>
+
+        <div class="resume-card__list-block">
+          <h3>Concerns</h3>
+          <ul>
+            <% screening[:concerns].each do |item| %>
+              <li><%= item %></li>
+            <% end %>
+          </ul>
+        </div>
+
+        <div class="resume-card__list-block">
+          <h3>Interview Questions</h3>
+          <ul>
+            <% screening[:interview_questions].each do |item| %>
+              <li><%= item %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+
+      <% if screening[:warnings].present? %>
+        <div class="resume-demo__alert resume-demo__alert--soft">
+          <strong>Warnings:</strong>
+          <span><%= screening[:warnings].join(" ") %></span>
+        </div>
+      <% end %>
+
+      <p class="resume-demo__meta">
+        <%= link_to "Open this run in Rubot Admin", "/rubot/admin/runs/#{@run.id}", class: "resume-demo__link" %>
+      </p>
+    </section>
+  <% end %>
+</section>

@@ -144,6 +144,37 @@ bin/rails generate rubot:workflow TicketTriage
 
 The generated classes are intentionally minimal. They are meant to be edited immediately rather than hidden behind a heavy DSL.
 
+Once the engine is mounted, `/rubot/playground` gives you a lightweight browser-based surface for running tools, agents, and workflows against fixture JSON while you iterate locally.
+
+## Regression evals
+
+Rubot evals let you run real flows against fixtures and fail fast when behavior drifts.
+
+```ruby
+class TicketTriageEval < Rubot::Eval
+  target TriageTicketAgent
+
+  fixture :billing_case,
+          input: {
+            ticket_id: "t_123",
+            priority: "normal",
+            tags: ["billing"]
+          },
+          expected: {
+            queue: "billing",
+            summary: "Route to billing"
+          }
+
+  score :output_match do |result|
+    result.output == result.expected
+  end
+
+  assert_threshold :output_match, equals: 1.0
+end
+```
+
+Run it with `rake 'rubot:eval[TicketTriageEval]'`.
+
 ## Current boundaries
 
 This quickstart is built on the in-process runtime with optional provider-backed agents. Provider-backed agents can now iterate through model responses and Rubot tool calls, while richer usage accounting and expanded operator UI are the next layers to add on top.

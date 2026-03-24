@@ -35,26 +35,94 @@ module Rubot
     end
 
     def rubot_runs_for(subject, limit: 5)
-      runs =
-        if defined?(Rubot::RunRecord) && Rubot.store.is_a?(Rubot::Stores::ActiveRecordStore) && subject.respond_to?(:id)
-          Rubot::RunRecord.includes(:event_records, :tool_call_records, :approval_records)
-                           .where(subject_type: subject.class.name, subject_id: subject.id.to_s)
-                           .order(started_at: :desc, created_at: :desc)
-                           .limit(limit)
-                           .map { |record| Rubot.store.find_run(record.id) }
-        else
-          Rubot.store.all_runs.select do |run|
-            run.subject == subject ||
-              (subject.respond_to?(:id) && run.subject&.respond_to?(:id) &&
-                run.subject.class.name == subject.class.name && run.subject.id.to_s == subject.id.to_s)
-          end.first(limit)
-        end
-
-      runs.compact.map { |run| Presenters::RunPresenter.new(run) }
+      Rubot.store.find_runs_for_subject(subject)
+           .first(limit)
+           .compact
+           .map { |run| Presenters::RunPresenter.new(run) }
     end
 
     def rubot_subject_runs_widget(subject, limit: 5)
       render("rubot/runs/subject_widget", subject:, runs: rubot_runs_for(subject, limit:))
+    end
+
+    def rubot_nav_link(item, current_path:)
+      active = current_path == item[:path]
+      classes = ["rubot-shell__nav-link"]
+      classes << "rubot-shell__nav-link--active" if active
+      link_to item[:label], item[:path], class: classes.join(" ")
+    end
+
+    def rubot_cell_value(row, column)
+      value = column[:value]
+      return value.call(row) if value.respond_to?(:call)
+
+      key = column[:key]
+      return row.public_send(key) if key && row.respond_to?(key)
+      return row[key] if key && row.is_a?(Hash)
+
+      nil
+    end
+
+    def rubot_schema_fields(schema)
+      return [] unless schema.respond_to?(:fields)
+
+      schema.fields.map do |field|
+        {
+          name: field.name,
+          label: field.name.to_s.tr("_", " ").capitalize,
+          type: field.type,
+          required: field.required,
+          item_type: field.item_type
+        }
+      end
+    end
+
+    def rubot_schema_value_pairs(payload, schema = nil)
+      payload = payload || {}
+
+      if schema.respond_to?(:fields)
+        rubot_schema_fields(schema).map do |field|
+          { label: field[:label], value: payload[field[:name]] || payload[field[:name].to_s] }
+        end
+      else
+        payload.map do |key, value|
+          { label: key.to_s.tr("_", " ").capitalize, value: value }
+        end
+      end
+    end
+
+    def rubot_schema_input_type(field)
+      case field[:type]
+      when :integer, :float
+        :number_field
+      when :boolean
+        :check_box
+      else
+        :text_field
+      end
+    end
+
+    def rubot_diff_rows(before_value, after_value)
+      before_hash = before_value.is_a?(Hash) ? before_value : {}
+      after_hash = after_value.is_a?(Hash) ? after_value : {}
+      keys = (before_hash.keys + after_hash.keys).map(&:to_s).uniq.sort
+
+      keys.map do |key|
+        before_item = before_hash[key.to_sym] || before_hash[key]
+        after_item = after_hash[key.to_sym] || after_hash[key]
+        status =
+          if before_item.nil? && !after_item.nil?
+            :added
+          elsif !before_item.nil? && after_item.nil?
+            :removed
+          elsif before_item == after_item
+            :unchanged
+          else
+            :changed
+          end
+
+        { key:, before: before_item, after: after_item, status: }
+      end
     end
 
     def rubot_json(value)

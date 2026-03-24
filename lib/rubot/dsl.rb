@@ -13,16 +13,17 @@ module Rubot
       subclass.instance_variable_set(:@rubot_input_schema, @rubot_input_schema)
       subclass.instance_variable_set(:@rubot_output_schema, @rubot_output_schema)
       subclass.instance_variable_set(:@rubot_policy, @rubot_policy)
-      subclass.instance_variable_set(:@rubot_memory_adapter, @rubot_memory_adapter)
+      subclass.instance_variable_set(:@rubot_memory_config, (@rubot_memory_config&.dup || Rubot::Memory::Config.new))
       subclass.instance_variable_set(:@rubot_provider_adapter, @rubot_provider_adapter)
       subclass.instance_variable_set(:@rubot_model_name, @rubot_model_name)
       subclass.instance_variable_set(:@rubot_middlewares, rubot_middlewares.dup)
+      subclass.instance_variable_set(:@rubot_playground_fixtures, rubot_playground_fixtures.dup)
     end
 
-    def instructions(&block)
-      return @rubot_instructions unless block
+    def instructions(value = nil, &block)
+      return @rubot_instructions if value.nil? && !block
 
-      @rubot_instructions = block.call
+      @rubot_instructions = value || block
     end
 
     def description(text = nil)
@@ -31,9 +32,15 @@ module Rubot
       @rubot_description = text
     end
 
-    def tools(*tool_classes)
+    def tools(*tool_classes, &block)
       @rubot_tools ||= []
-      @rubot_tools.concat(tool_classes) unless tool_classes.empty?
+      if block
+        @rubot_dynamic_tools = block
+      elsif tool_classes.length == 1 && tool_classes.first.is_a?(Proc)
+        @rubot_dynamic_tools = tool_classes.first
+      elsif !tool_classes.empty?
+        @rubot_tools.concat(tool_classes)
+      end
       @rubot_tools
     end
 
@@ -65,10 +72,16 @@ module Rubot
       @rubot_policy = policy_name || block
     end
 
-    def memory(adapter = nil)
-      return @rubot_memory_adapter if adapter.nil?
+    def rubot_policy
+      @rubot_policy
+    end
 
-      @rubot_memory_adapter = adapter
+    def memory(&block)
+      @rubot_memory_config ||= Rubot::Memory::Config.new
+      return @rubot_memory_config unless block
+
+      @rubot_memory_config.instance_eval(&block)
+      @rubot_memory_config
     end
 
     def provider(adapter = nil)
@@ -106,6 +119,29 @@ module Rubot
 
     def rubot_middlewares
       @rubot_middlewares ||= []
+    end
+
+    def rubot_memory_config
+      @rubot_memory_config ||= Rubot::Memory::Config.new
+    end
+
+    def rubot_dynamic_tools
+      @rubot_dynamic_tools
+    end
+
+    def playground_fixture(name, input: nil, context: {}, subject: nil, &block)
+      @rubot_playground_fixtures ||= []
+      @rubot_playground_fixtures << {
+        name: name.to_sym,
+        input: input,
+        context: context,
+        subject: subject,
+        block: block
+      }
+    end
+
+    def rubot_playground_fixtures
+      @rubot_playground_fixtures ||= []
     end
   end
 end

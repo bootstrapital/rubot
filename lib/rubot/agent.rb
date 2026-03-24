@@ -36,7 +36,25 @@ module Rubot
       provider = resolve_provider
       raise NotImplementedError, "#{self.class.name} must implement #perform" unless provider
 
-      messages = provider_messages(input:, context:)
+      resolution_context = AgentResolutionContext.new(agent: self, run: run, input: input, context: context)
+      resolved_instructions = resolve_runtime_value(self.class.instructions, resolution_context)
+      resolved_model = resolve_runtime_value(self.class.model, resolution_context)
+      resolved_tools = resolve_tools(resolution_context)
+
+      run.add_event(
+        Event.new(
+          type: "agent.configuration.resolved",
+          step_name: run.current_step,
+          payload: {
+            agent_name: self.class.name,
+            model: resolved_model,
+            tools: resolved_tools.map(&:name),
+            instructions_preview: resolved_instructions&.to_s&.slice(0, 120)
+          }.compact
+        )
+      )
+
+      conversation_history = provider_messages(input:, context:, instructions: resolved_instructions)
       turn = 0
 
       loop do
@@ -51,12 +69,22 @@ module Rubot
           )
         )
 
+        model_context = build_model_context(
+          messages: conversation_history,
+          run: run,
+          turn: turn,
+          input: input,
+          context: context
+        )
+
         provider_result = invoke_provider_middleware(
           input: input,
           context: context,
           run: run,
           turn: turn,
-          messages: messages
+          messages: model_context[:messages],
+          tools: resolved_tools,
+          model: resolved_model
         ) do |middleware_env|
           provider.complete(
             messages: middleware_env[:messages],
@@ -75,12 +103,12 @@ module Rubot
         )
 
         if provider_result.tool_calls.any?
-          messages << {
+          conversation_history << {
             role: :assistant,
             content: provider_result.content,
             tool_calls: provider_result.tool_calls
           }.compact
-          messages.concat(execute_provider_tool_calls(provider_result.tool_calls, run))
+          conversation_history.concat(execute_provider_tool_calls(provider_result.tool_calls, run, resolved_tools))
           next
         end
 
@@ -101,12 +129,63 @@ module Rubot
       self.class.provider || Rubot.provider
     end
 
-    def provider_messages(input:, context:)
+    def provider_messages(input:, context:, instructions: nil)
       messages = []
-      instructions = self.class.instructions
       messages << { role: :system, content: instructions } if instructions
       messages << { role: :user, content: JSON.generate(input: input, context: context) }
       messages
+    end
+
+    def build_model_context(messages:, run:, turn:, input:, context:)
+      subject_messages = Rubot::Memory::SubjectContext.fetch_messages(
+        subject: run.subject,
+        run: run,
+        agent_class: self.class,
+        input: input,
+        context: context
+      )
+      working_messages = Array(messages) + Array(subject_messages)
+
+      if subject_messages.any?
+        run.add_event(
+          Event.new(
+            type: "memory.subject_context.loaded",
+            step_name: run.current_step,
+            payload: {
+              agent_name: self.class.name,
+              turn: turn,
+              subject_type: run.subject_type,
+              subject_id: run.subject_id,
+              message_count: subject_messages.length
+            }.compact
+          )
+        )
+      end
+
+      result = Rubot::Memory::ContextBuilder.new(self.class.rubot_memory_config).build(
+        messages: working_messages,
+        run: run,
+        agent_class: self.class,
+        turn: turn,
+        input: input,
+        context: context
+      )
+
+      run.add_event(
+        Event.new(
+          type: "memory.context.built",
+          step_name: run.current_step,
+          payload: {
+            agent_name: self.class.name,
+            turn: turn,
+            message_count: result[:messages].length,
+            estimated_tokens: result[:estimated_tokens],
+            processors: result[:applied_processors]
+          }
+        )
+      )
+
+      result
     end
 
     def normalize_provider_output(result)
@@ -118,8 +197,8 @@ module Rubot
       raise Rubot::ValidationError, "#{self.class.name} provider response did not include structured output"
     end
 
-    def execute_provider_tool_calls(tool_calls, run)
-      registry = tool_registry
+    def execute_provider_tool_calls(tool_calls, run, tool_classes = self.class.rubot_tools)
+      registry = tool_registry(tool_classes)
 
       Array(tool_calls).map do |tool_call|
         normalized_call = symbolize_hash(tool_call)
@@ -141,14 +220,14 @@ module Rubot
       end
     end
 
-    def tool_registry
-      self.class.rubot_tools.each_with_object({}) do |tool_class, memo|
+    def tool_registry(tool_classes = self.class.rubot_tools)
+      tool_classes.each_with_object({}) do |tool_class, memo|
         memo[tool_class.name] = tool_class
         memo[tool_class.name.split("::").last] = tool_class
       end
     end
 
-    def invoke_provider_middleware(input:, context:, run:, turn:, messages:)
+    def invoke_provider_middleware(input:, context:, run:, turn:, messages:, tools:, model:)
       env = {
         phase: :provider,
         agent_class: self.class,
@@ -157,9 +236,9 @@ module Rubot
         run: run,
         turn: turn,
         messages: messages,
-        tools: self.class.rubot_tools,
+        tools: tools,
         output_schema: self.class.output_schema,
-        model: self.class.model
+        model: model
       }
 
       final_env = invoke_middleware(env) do |middleware_env|
@@ -203,6 +282,30 @@ module Rubot
         usage: provider_result.usage,
         tool_calls: provider_result.tool_calls
       }.compact
+    end
+
+    def resolve_tools(resolution_context)
+      value =
+        if self.class.rubot_dynamic_tools
+          resolve_runtime_value(self.class.rubot_dynamic_tools, resolution_context)
+        else
+          self.class.rubot_tools
+        end
+
+      Array(value)
+    end
+
+    def resolve_runtime_value(value, resolution_context)
+      case value
+      when Proc
+        if value.arity == 1
+          value.call(resolution_context)
+        else
+          instance_exec(resolution_context, &value)
+        end
+      else
+        value
+      end
     end
 
     def invoke_hooks(hooks, run, payload, context)

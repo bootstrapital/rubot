@@ -25,6 +25,12 @@ ActiveRecord::Schema.define do
       t.datetime :completed_at
       t.bigint :created_by_id
       t.string :correlation_id
+      t.string :replay_of_run_id
+      t.datetime :cancellation_requested_at
+      t.datetime :canceled_at
+      t.string :execution_claim_token
+      t.datetime :execution_claimed_at
+      t.integer :lock_version, null: false, default: 0
       t.timestamps
     end
 
@@ -71,6 +77,9 @@ require_relative "../app/models/rubot/run_record"
 require_relative "../app/models/rubot/event_record"
 require_relative "../app/models/rubot/tool_call_record"
 require_relative "../app/models/rubot/approval_record"
+
+ActiveRecordCustomer = Struct.new(:id) unless defined?(ActiveRecordCustomer)
+ActiveRecordSubject = Struct.new(:id) unless defined?(ActiveRecordSubject)
 
 class ActiveRecordStoreWorkflow < Rubot::Workflow
   step :prepare
@@ -121,7 +130,9 @@ class ActiveRecordStoreTest < Minitest::Test
     assert_equal({ ticket_id: "t_123" }, persisted.input)
     assert_equal({ source: "test", assignee: "ops@example.com" }, persisted.context)
     assert_equal true, persisted.state[:prepare][:ok]
-    assert_equal 5, persisted.events.length
+    assert_equal run.id, persisted.trace_id
+    assert_nil persisted.replay_of_run_id
+    assert_equal 6, persisted.events.length
     assert_equal "review", persisted.approvals.first.step_name
     assert_equal "String", persisted.approvals.first.assigned_to_type
     assert_equal "ops@example.com", persisted.approvals.first.assigned_to_id
@@ -136,5 +147,56 @@ class ActiveRecordStoreTest < Minitest::Test
     assert_equal :completed, completed.status
     assert_equal true, completed.output[:finish][:approved]
     assert_equal "ops@example.com", completed.approvals.first.decision_payload[:approved_by]
+  end
+
+  def test_persists_trace_and_replay_metadata
+    original = Rubot.run(ActiveRecordStoreWorkflow, input: { ticket_id: "t_123" }, context: { assignee: "ops@example.com" })
+    replay = Rubot.run(
+      ActiveRecordStoreWorkflow,
+      input: original.input,
+      context: original.context,
+      trace_id: original.trace_id,
+      replay_of_run_id: original.id
+    )
+
+    persisted = Rubot.store.find_run(replay.id)
+
+    assert_equal original.trace_id, persisted.trace_id
+    assert_equal original.id, persisted.replay_of_run_id
+  end
+
+  def test_hydrates_subject_and_finds_runs_for_subject
+    customer = ActiveRecordCustomer.new("cust_123")
+
+    Rubot.configure do |config|
+      config.subject_locator = ->(reference) { customer if reference.type == ActiveRecordCustomer.name && reference.id == customer.id }
+    end
+
+    run = Rubot.run(ActiveRecordStoreWorkflow, input: { ticket_id: "t_123" }, subject: customer, context: { assignee: "ops@example.com" })
+    hydrated = Rubot.store.find_run(run.id)
+
+    assert_equal customer, hydrated.subject
+    assert_equal ActiveRecordCustomer.name, hydrated.subject_type
+    assert_equal customer.id, hydrated.subject_id
+    assert_equal [run.id], Rubot.store.find_runs_for_subject(customer).map(&:id)
+  ensure
+    Rubot.configure do |config|
+      config.subject_locator = nil
+    end
+  end
+
+  def test_claim_run_execution_prevents_same_subject_conflicts
+    subject = ActiveRecordSubject.new("subj_1")
+
+    first = Rubot::Run.new(name: ActiveRecordStoreWorkflow.name, kind: :workflow, input: {}, subject:, persist: false)
+    Rubot.store.save_run(first)
+    claimed = Rubot.store.claim_run_execution(first)
+    second = Rubot::Run.new(name: ActiveRecordStoreWorkflow.name, kind: :workflow, input: {}, subject:, persist: false)
+    Rubot.store.save_run(second)
+
+    assert claimed.execution_claim_token
+    assert_raises(Rubot::ConcurrencyError) { Rubot.store.claim_run_execution(second) }
+
+    Rubot.store.release_run_execution(claimed)
   end
 end

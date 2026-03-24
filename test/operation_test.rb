@@ -66,13 +66,18 @@ class OperationTest < Minitest::Test
   def test_operation_enqueue_uses_configured_async_path
     calls = []
 
-    Rubot.stub(:enqueue, ->(runnable, input:, subject:, context:) { calls << { runnable:, input:, subject:, context: } }) do
-      ExistingWorkflowOperation.enqueue(
-        trigger: :webhook,
-        payload: { body: "async", account_id: "acct_456" },
-        subject: :subject_ref
-      )
+    original_enqueue = Rubot.method(:enqueue)
+    Rubot.singleton_class.send(:define_method, :enqueue) do |runnable, input:, subject:, context:, **_options|
+      calls << { runnable:, input:, subject:, context: }
     end
+
+    ExistingWorkflowOperation.enqueue(
+      trigger: :webhook,
+      payload: { body: "async", account_id: "acct_456" },
+      subject: :subject_ref
+    )
+  ensure
+    Rubot.singleton_class.send(:define_method, :enqueue, original_enqueue)
 
     assert_equal 1, calls.length
     assert_equal OperationWorkflow, calls.first[:runnable]

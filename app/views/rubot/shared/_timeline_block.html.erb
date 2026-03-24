@@ -1,0 +1,13 @@
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <% if local_assigns[:meta] %>
+      <span class="rubot-card__meta"><%= meta %></span>
+    <% end %>
+  </div>
+  <ol class="rubot-timeline">
+    <% events.each do |event| %>
+      <%= render "rubot/runs/event", event: event %>
+    <% end %>
+  </ol>
+</article>

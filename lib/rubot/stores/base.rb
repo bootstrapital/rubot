@@ -18,6 +18,22 @@ module Rubot
       def pending_approvals
         raise NotImplementedError, "#{self.class.name} must implement #pending_approvals"
       end
+
+      def find_runs_for_subject(_subject)
+        raise NotImplementedError, "#{self.class.name} must implement #find_runs_for_subject"
+      end
+
+      def claim_run_execution(run)
+        run
+      end
+
+      def release_run_execution(run)
+        run
+      end
+
+      def execution_claims_supported?
+        false
+      end
     end
   end
 end

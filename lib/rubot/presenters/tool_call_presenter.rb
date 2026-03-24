@@ -63,6 +63,37 @@ module Rubot
         output[:confidence] || output["confidence"]
       end
 
+      def as_admin_json
+        {
+          id: id,
+          run_id: run_id,
+          name: name,
+          short_name: short_name,
+          status: status,
+          step_name: step_name,
+          duration_ms: duration_ms,
+          confidence: confidence,
+          warnings: warnings,
+          input: input,
+          output: output,
+          error: error
+        }
+      end
+
+      def tool_class
+        Object.const_get(name) if Object.const_defined?(name)
+      rescue NameError
+        nil
+      end
+
+      def input_schema
+        tool_class&.input_schema
+      end
+
+      def output_schema
+        tool_class&.output_schema
+      end
+
       private
 
       def matched_event

@@ -59,8 +59,62 @@ module Rubot
         run.output
       end
 
+      def trace_id
+        run.trace_id
+      end
+
+      def replay_of_run_id
+        run.replay_of_run_id
+      end
+
+      def as_admin_json
+        {
+          id: id,
+          name: name,
+          kind: run.kind,
+          trace_id: trace_id,
+          replay_of_run_id: replay_of_run_id,
+          status: run.status,
+          current_step: run.current_step,
+          started_at: run.started_at&.iso8601,
+          completed_at: run.completed_at&.iso8601,
+          duration: duration,
+          subject: subject_label,
+          confidence: confidence,
+          warnings: warnings,
+          approvals: run.approvals.map(&:to_h),
+          tool_calls: tool_calls.map(&:as_admin_json),
+          metrics: metrics,
+          output: output,
+          error: error,
+          steps: step_groups.map do |step|
+            {
+              name: step[:name],
+              status: step[:status],
+              confidence: step[:confidence],
+              warnings: step[:warnings],
+              event_count: step[:events].length,
+              tool_call_ids: step[:tool_calls].map(&:id),
+              result: step[:result]
+            }
+          end,
+          events: run.events.map(&:to_h)
+        }
+      end
+
       def failed?
         run.failed?
+      end
+
+      def metrics
+        {
+          duration_seconds: duration_seconds,
+          approval_wait_seconds: approval_wait_seconds,
+          tool_calls_total: run.tool_calls.length,
+          tool_calls_failed: run.tool_calls.count { |tool_call| tool_call[:status] == "failed" || tool_call["status"] == "failed" },
+          model_tokens: model_usage[:total_tokens],
+          model_cost: model_usage[:total_cost]
+        }
       end
 
       def error
@@ -105,6 +159,42 @@ module Rubot
       end
 
       private
+
+      def duration_seconds
+        return unless run.started_at
+
+        end_time = run.completed_at || Rubot.configuration.time_source.call
+        (end_time - run.started_at).round(2)
+      end
+
+      def approval_wait_seconds
+        waits = run.approvals.filter_map do |approval|
+          request_event = run.events.find do |event|
+            event.type == "approval.requested" && event.step_name.to_s == approval.step_name.to_s
+          end
+          next unless request_event
+
+          ((approval.decided_at || Rubot.configuration.time_source.call) - request_event.timestamp).round(2)
+        end
+        return if waits.empty?
+
+        (waits.sum / waits.length.to_f).round(2)
+      end
+
+      def model_usage
+        @model_usage ||= begin
+          usage_rows = run.events.filter_map do |event|
+            next unless event.type == "model.response.received"
+
+            event.payload[:usage] || event.payload["usage"]
+          end
+
+          {
+            total_tokens: usage_rows.sum { |usage| usage[:total_tokens] || usage["total_tokens"] || 0 },
+            total_cost: usage_rows.sum { |usage| usage[:total_cost] || usage["total_cost"] || 0.0 }.round(6)
+          }
+        end
+      end
 
       def step_status(step_name)
         return :failed if failed? && run.current_step.to_s == step_name

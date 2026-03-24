@@ -33,6 +33,21 @@ module Rubot
       def status
         approval.status.to_s
       end
+
+      def as_admin_json
+        {
+          run_id: run_id,
+          run_name: run_name,
+          step_name: step_name,
+          role_requirement: role_requirement,
+          reason: reason,
+          status: status,
+          assigned_to_type: approval.assigned_to_type,
+          assigned_to_id: approval.assigned_to_id,
+          sla_due_at: approval.sla_due_at&.iso8601,
+          expires_at: approval.expires_at&.iso8601
+        }
+      end
     end
   end
 end

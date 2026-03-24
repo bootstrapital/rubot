@@ -1,0 +1,302 @@
+/*
+ * This is a manifest file that'll be compiled into application.css, which will include all the files
+ * listed below.
+ *
+ * Any CSS (and SCSS, if configured) file within this directory, lib/assets/stylesheets, or any plugin's
+ * vendor/assets/stylesheets directory can be referenced here using a relative path.
+ *
+ * You're free to add application-wide styles to this file and they'll appear at the bottom of the
+ * compiled file so the styles you add here take precedence over styles defined in any other CSS
+ * files in this directory. Styles in this file should be added after the last require_* statement.
+ * It is generally better to create a new file per style scope.
+ *
+ *= require_tree .
+ *= require_self
+ */
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Avenir Next", sans-serif;
+  background: linear-gradient(180deg, #f7f2e9 0%, #fffdfa 100%);
+  color: #1a2320;
+}
+
+.app-home {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.app-home__hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.app-home__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  color: #8a3b12;
+}
+
+.app-home__lede,
+.app-home__meta {
+  color: #55635e;
+}
+
+.app-home__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.app-home__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #173d32;
+  color: white;
+  text-decoration: none;
+  padding: 0.72rem 1rem;
+  font-weight: 600;
+}
+
+.app-home__button--secondary {
+  background: #ece4d7;
+  color: #263530;
+}
+
+.app-home__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.app-panel {
+  background: rgba(255, 252, 246, 0.92);
+  border: 1px solid rgba(103, 71, 48, 0.14);
+  border-radius: 20px;
+  padding: 1.35rem;
+  box-shadow: 0 20px 40px rgba(78, 51, 34, 0.08);
+}
+
+.app-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.app-card-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.app-card {
+  border: 1px solid rgba(103, 71, 48, 0.12);
+  border-radius: 16px;
+  background: white;
+  padding: 1rem;
+}
+
+.app-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.app-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid rgba(103, 71, 48, 0.1);
+}
+
+.app-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.app-list span {
+  display: block;
+  color: #55635e;
+  margin-top: 0.2rem;
+}
+
+.app-inline-link {
+  color: #8a3b12;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.resume-demo {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.resume-demo__hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.resume-demo__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.74rem;
+  color: #8a3b12;
+}
+
+.resume-demo__lede,
+.resume-demo__meta {
+  color: #55635e;
+}
+
+.resume-demo__links {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.resume-demo__link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #173d32;
+  color: white;
+  text-decoration: none;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+}
+
+.resume-demo__link--muted {
+  background: #ece4d7;
+  color: #263530;
+}
+
+.resume-demo__button {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: #9a3412;
+  color: white;
+  padding: 0.85rem 1.15rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.resume-demo__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.95fr);
+  gap: 1.25rem;
+}
+
+.resume-demo__grid--result {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.resume-card {
+  background: rgba(255, 252, 246, 0.92);
+  border: 1px solid rgba(103, 71, 48, 0.14);
+  border-radius: 20px;
+  padding: 1.35rem;
+  box-shadow: 0 20px 40px rgba(78, 51, 34, 0.08);
+}
+
+.resume-card--result {
+  margin-top: 1.5rem;
+}
+
+.resume-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.resume-form__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.resume-form__field label {
+  font-weight: 600;
+}
+
+.resume-form__field input,
+.resume-form__field select,
+.resume-form__field textarea {
+  width: 100%;
+  border: 1px solid rgba(103, 71, 48, 0.18);
+  border-radius: 14px;
+  padding: 0.8rem 0.9rem;
+  font: inherit;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.resume-card__list-block ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.resume-score {
+  min-width: 130px;
+  text-align: center;
+  background: #183b31;
+  color: white;
+  border-radius: 18px;
+  padding: 1rem;
+}
+
+.resume-score__value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.resume-score__label {
+  display: block;
+  font-size: 0.88rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.86;
+}
+
+.resume-demo__alert {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: #fee2e2;
+  color: #8b1e1e;
+}
+
+.resume-demo__alert--soft {
+  background: #fff3cd;
+  color: #7c5200;
+}
+
+@media (max-width: 860px) {
+  .app-home__hero,
+  .app-home__grid,
+  .resume-demo__hero,
+  .resume-demo__grid {
+    grid-template-columns: 1fr;
+    display: grid;
+  }
+}

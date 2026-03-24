@@ -4,15 +4,18 @@ module Rubot
   class Run
     STATUSES = %i[queued running waiting_for_approval completed failed canceled].freeze
 
-    attr_accessor :current_step, :output, :error, :state
-    attr_reader :id, :name, :kind, :status, :subject, :input, :context, :events, :approvals, :started_at, :completed_at, :tool_calls
+    attr_accessor :current_step, :output, :error, :state, :execution_claim_token, :execution_claimed_at
+    attr_reader :id, :name, :kind, :status, :subject, :input, :context, :events, :approvals,
+                :started_at, :completed_at, :tool_calls, :trace_id, :replay_of_run_id,
+                :subject_ref, :cancellation_requested_at, :canceled_at
 
-    def initialize(name:, kind:, input:, subject: nil, context: {}, id: nil, status: :queued, state: {}, output: nil, error: nil, current_step: nil, started_at: nil, completed_at: nil, events: [], approvals: [], tool_calls: [], persist: true)
+    def initialize(name:, kind:, input:, subject: nil, subject_ref: nil, context: {}, id: nil, status: :queued, state: {}, output: nil, error: nil, current_step: nil, started_at: nil, completed_at: nil, events: [], approvals: [], tool_calls: [], trace_id: nil, replay_of_run_id: nil, cancellation_requested_at: nil, canceled_at: nil, execution_claim_token: nil, execution_claimed_at: nil, persist: true)
       @id = id || Rubot.configuration.id_generator.call
       @name = name
       @kind = kind
       @input = input
       @subject = subject
+      @subject_ref = subject_ref || Rubot::Subject.reference(subject)
       @context = context
       @state = state
       @events = events
@@ -24,6 +27,12 @@ module Rubot
       @current_step = current_step
       @started_at = started_at
       @completed_at = completed_at
+      @trace_id = trace_id || @id
+      @replay_of_run_id = replay_of_run_id
+      @cancellation_requested_at = cancellation_requested_at
+      @canceled_at = canceled_at
+      @execution_claim_token = execution_claim_token
+      @execution_claimed_at = execution_claimed_at
       persist! if persist
     end
 
@@ -45,6 +54,34 @@ module Rubot
 
     def failed?
       status == :failed
+    end
+
+    def canceled?
+      status == :canceled
+    end
+
+    def cancel_requested?
+      !cancellation_requested_at.nil?
+    end
+
+    def terminal?
+      completed? || failed? || canceled?
+    end
+
+    def subject_type
+      subject_ref&.type
+    end
+
+    def subject_id
+      subject_ref&.id
+    end
+
+    def subject_key
+      subject_ref&.key
+    end
+
+    def replay?
+      !replay_of_run_id.nil?
     end
 
     def start!
@@ -70,6 +107,22 @@ module Rubot
       @status = :failed
       @completed_at = Rubot.configuration.time_source.call
       persist!
+    end
+
+    def request_cancellation!(payload = {})
+      @cancellation_requested_at ||= Rubot.configuration.time_source.call
+      add_event(Event.new(type: "run.cancellation_requested", step_name: current_step, payload: payload))
+      persist!
+      self
+    end
+
+    def cancel!(payload = {})
+      @status = :canceled
+      @canceled_at ||= Rubot.configuration.time_source.call
+      @completed_at ||= @canceled_at
+      add_event(Event.new(type: "run.canceled", step_name: current_step, payload: payload))
+      persist!
+      self
     end
 
     def add_event(event)
@@ -141,6 +194,38 @@ module Rubot
       self
     end
 
+    def checkpoints
+      metadata[:checkpoints] ||= []
+    end
+
+    def checkpoint!(step_name:, kind:, status:, payload: nil)
+      entry = {
+        step_name: step_name.to_s,
+        kind: kind.to_s,
+        status: status.to_s,
+        payload: payload,
+        timestamp: Rubot.configuration.time_source.call.iso8601
+      }.compact
+      checkpoints.reject! { |checkpoint| checkpoint[:step_name] == entry[:step_name] }
+      checkpoints << entry
+      persist!
+      entry
+    end
+
+    def checkpoint_for(step_name)
+      checkpoints.reverse.find { |checkpoint| checkpoint[:step_name] == step_name.to_s }
+    end
+
+    def step_completed?(step_name)
+      checkpoint_for(step_name)&.dig(:status) == "completed"
+    end
+
+    def raise_if_canceled!
+      return unless cancel_requested? || canceled?
+
+      raise CancellationError, "Run #{id} was canceled"
+    end
+
     def persist!
       Rubot.store.save_run(self)
       Rubot::LiveUpdates.broadcast_run(self)
@@ -163,13 +248,25 @@ module Rubot
         output: output,
         error: error,
         subject: subject,
+        subject_ref: subject_ref&.to_h,
         context: context,
+        trace_id: trace_id,
+        replay_of_run_id: replay_of_run_id,
+        cancellation_requested_at: cancellation_requested_at&.iso8601,
+        canceled_at: canceled_at&.iso8601,
         approvals: approvals.map(&:to_h),
         events: events.map(&:to_h),
         tool_calls: tool_calls,
         started_at: started_at&.iso8601,
-        completed_at: completed_at&.iso8601
+        completed_at: completed_at&.iso8601,
+        checkpoints: checkpoints
       }
+    end
+
+    private
+
+    def metadata
+      state[:_rubot] ||= {}
     end
   end
 end

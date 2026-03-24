@@ -10,6 +10,7 @@ module Rubot
         subclass.instance_variable_set(:@rubot_operation_tools, (rubot_operation_tools || {}).dup)
         subclass.instance_variable_set(:@rubot_operation_triggers, rubot_operation_triggers.dup)
         subclass.instance_variable_set(:@rubot_operation_ui, @rubot_operation_ui)
+        subclass.instance_variable_set(:@rubot_operation_memory_config, (@rubot_operation_memory_config&.dup || Rubot::Memory::Config.new))
       end
 
       def workflow(klass = nil, name: "Workflow", &block)
@@ -55,14 +56,30 @@ module Rubot
         @rubot_operation_ui
       end
 
+      def memory(&block)
+        @rubot_operation_memory_config ||= Rubot::Memory::Config.new
+        return @rubot_operation_memory_config unless block
+
+        @rubot_operation_memory_config.instance_eval(&block)
+        @rubot_operation_memory_config
+      end
+
       def launch(payload: {}, subject: nil, context: {}, trigger: nil)
         resolved = resolve_launch(trigger:, payload:, subject:, context:)
         Rubot.run(runnable, input: resolved[:input], subject: resolved[:subject], context: resolved[:context])
       end
 
+      def launch_for(subject, payload: {}, context: {}, trigger: nil)
+        launch(payload:, subject:, context:, trigger:)
+      end
+
       def enqueue(payload: {}, subject: nil, context: {}, trigger: nil)
         resolved = resolve_launch(trigger:, payload:, subject:, context:)
         Rubot.enqueue(runnable, input: resolved[:input], subject: resolved[:subject], context: resolved[:context])
+      end
+
+      def enqueue_for(subject, payload: {}, context: {}, trigger: nil)
+        enqueue(payload:, subject:, context:, trigger:)
       end
 
       def runnable
@@ -102,7 +119,15 @@ module Rubot
           end
 
         component.class_eval(&block) if block
+        apply_operation_defaults(component, superclass)
         component
+      end
+
+      def apply_operation_defaults(component, superclass)
+        return unless superclass == Rubot::Agent
+        return if memory.empty? || !component.rubot_memory_config.empty?
+
+        component.instance_variable_set(:@rubot_memory_config, memory.dup)
       end
 
       def default_tool_name(identifier)

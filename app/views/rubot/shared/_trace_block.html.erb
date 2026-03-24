@@ -1,0 +1,24 @@
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <span class="rubot-card__meta"><%= grouped_events.length %> groups</span>
+  </div>
+
+  <div class="rubot-card-list">
+    <% grouped_events.each do |type, events| %>
+      <section class="rubot-card">
+        <div class="rubot-card__header">
+          <div>
+            <h3><%= type %></h3>
+            <p class="rubot-card__meta"><%= events.length %> event<%= "s" unless events.length == 1 %></p>
+          </div>
+        </div>
+        <ol class="rubot-timeline">
+          <% events.each do |event| %>
+            <%= render "rubot/runs/event", event: event %>
+          <% end %>
+        </ol>
+      </section>
+    <% end %>
+  </div>
+</article>

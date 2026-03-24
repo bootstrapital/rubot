@@ -1,0 +1,22 @@
+<article class="rubot-panel">
+  <div class="rubot-page__header">
+    <h2><%= title %></h2>
+    <% if local_assigns[:meta] %>
+      <span class="rubot-card__meta"><%= meta %></span>
+    <% end %>
+  </div>
+
+  <%= form_with url: url, method: method || :post, local: true, class: "rubot-form" do |form| %>
+    <% rubot_schema_fields(schema).each do |field| %>
+      <div class="rubot-form-field">
+        <%= form.label field[:name], field[:label] %>
+        <% if rubot_schema_input_type(field) == :check_box %>
+          <%= form.check_box field[:name] %>
+        <% else %>
+          <%= form.public_send(rubot_schema_input_type(field), field[:name], value: values&.dig(field[:name]), required: field[:required]) %>
+        <% end %>
+      </div>
+    <% end %>
+    <%= form.submit submit_label || "Submit", class: "rubot-button" %>
+  <% end %>
+</article>

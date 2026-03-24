@@ -15,5 +15,9 @@ module Rubot
         end
       end
     end
+
+    rake_tasks do
+      load File.expand_path("../tasks/rubot_eval.rake", __dir__)
+    end
   end
 end

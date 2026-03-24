@@ -10,37 +10,49 @@
     </div>
   </header>
 
-  <section class="rubot-panel-grid">
-    <article class="rubot-panel">
-      <h2>Overview</h2>
-      <dl class="rubot-kv">
-        <dt>Status</dt>
-        <dd><%= rubot_status_badge(@tool_call.status) %></dd>
-        <dt>Step</dt>
-        <dd><%= @tool_call.step_name || "unscoped" %></dd>
-        <dt>Duration</dt>
-        <dd><%= @tool_call.duration_ms ? "#{@tool_call.duration_ms}ms" : "n/a" %></dd>
-      </dl>
-
-      <% if @tool_call.confidence || @tool_call.warnings.any? %>
-        <div class="rubot-badge-row">
-          <%= rubot_confidence_badge(@tool_call.confidence) %>
-          <%= rubot_warning_badges(@tool_call.warnings) %>
-        </div>
+  <section class="rubot-workbench">
+    <div class="rubot-workbench__main">
+      <% tool_overview_badges = capture do %>
+        <%= rubot_confidence_badge(@tool_call.confidence) %>
+        <%= rubot_warning_badges(@tool_call.warnings) %>
       <% end %>
-    </article>
-  </section>
 
-  <section class="rubot-panel-grid">
-    <article class="rubot-panel">
-      <h2>Input</h2>
-      <pre><%= rubot_json(@tool_call.input) %></pre>
-    </article>
+      <%= render "rubot/shared/detail_panel",
+                 title: "Tool Overview",
+                 badge: rubot_status_badge(@tool_call.status),
+                 badges: tool_overview_badges %>
+      <%= render "rubot/shared/schema_result",
+                 title: "Input",
+                 meta: "Schema-driven result block",
+                 schema: @tool_call.input_schema,
+                 payload: @tool_call.input %>
+      <%= render "rubot/shared/schema_result",
+                 title: "Output",
+                 meta: "Schema-driven result block",
+                 schema: @tool_call.output_schema,
+                 payload: @tool_call.output %>
+      <%= render "rubot/shared/diff_block",
+                 title: "Input / Output Diff",
+                 meta: "Reusable diff block",
+                 before_value: @tool_call.input,
+                 after_value: @tool_call.output %>
+    </div>
 
-    <article class="rubot-panel">
-      <h2>Output</h2>
-      <pre><%= rubot_json(@tool_call.output) %></pre>
-    </article>
+    <aside class="rubot-workbench__side">
+      <%= render "rubot/shared/detail_panel",
+                 title: "Execution",
+                 items: [
+                   { label: "Step", value: @tool_call.step_name || "unscoped" },
+                   { label: "Duration", value: (@tool_call.duration_ms ? "#{@tool_call.duration_ms}ms" : "n/a") }
+                 ] %>
+      <%= render "rubot/shared/action_panel",
+                 title: "Actions",
+                 description: "Reusable action panel block for operator workflows.",
+                 actions: [
+                   link_to("Back to Run", rubot.run_path(@run.id), class: "rubot-button rubot-button--secondary"),
+                   link_to("Approval Inbox", rubot.approvals_path, class: "rubot-button")
+                 ] %>
+    </aside>
   </section>
 
   <% if @tool_call.error %>
