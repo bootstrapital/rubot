@@ -55,7 +55,7 @@ module Rubot
         return run if run.waiting_for_approval? || run.failed?
       end
 
-      run.complete!(run.state)
+      run.complete!(run.state.except(:_rubot))
     rescue StandardError => e
       handle_failure(e)
       raise
@@ -75,7 +75,7 @@ module Rubot
         return run if run.waiting_for_approval? || run.failed?
       end
 
-      run.complete!(run.state)
+      run.complete!(run.state.except(:_rubot))
     rescue StandardError => e
       handle_failure(e)
       raise

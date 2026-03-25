@@ -89,7 +89,7 @@ module Rubot
 
     def resolve_runnable(run, runnable)
       klass = runnable.is_a?(Class) ? runnable : runnable&.class
-      klass ||= Object.const_get(run.name)
+      klass ||= run.name.constantize
       expected_kind = infer_kind(klass)
       return klass if expected_kind == run.kind
 

@@ -41,7 +41,7 @@ module Rubot
 
       def resolve_fixture(fixture)
         dynamic = fixture[:block] ? runnable.instance_exec(&fixture[:block]) : {}
-        resolved = symbolize_hash(dynamic || {})
+        resolved = Rubot::HashUtils.symbolize(dynamic || {})
 
         {
           name: fixture[:name],
@@ -97,19 +97,6 @@ module Rubot
           false
         else
           nil
-        end
-      end
-
-      def symbolize_hash(value)
-        case value
-        when Hash
-          value.each_with_object({}) do |(key, item), memo|
-            memo[key.to_sym] = symbolize_hash(item)
-          end
-        when Array
-          value.map { |item| symbolize_hash(item) }
-        else
-          value
         end
       end
     end

@@ -191,7 +191,7 @@ module Rubot
 
         kind = record.workflow_name ? :workflow : :agent
         name = record.workflow_name || record.agent_name
-        subject_reference = Rubot::Subject::Reference.new(type: record.subject_type, id: record.subject_id) if record.subject_type && record.subject_id
+        subject_reference = Rubot::Subject::Reference.from_parts(type: record.subject_type, id: record.subject_id) if record.subject_type && record.subject_id
         subject = Rubot::Subject.resolve(subject_reference)
 
         Rubot::Run.restore(

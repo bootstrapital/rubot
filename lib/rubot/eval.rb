@@ -191,7 +191,7 @@ module Rubot
       return base unless fixture_definition.block
 
       dynamic = instance_exec(&fixture_definition.block) || {}
-      base.merge(symbolize_hash(dynamic))
+      base.merge(Rubot::HashUtils.symbolize(dynamic))
     end
 
     def execute_target(fixture)
@@ -264,19 +264,6 @@ module Rubot
     rescue ArgumentError, TypeError
       raise Rubot::ValidationError, "Eval scores must be numeric or boolean"
     end
-
-    def symbolize_hash(value)
-      case value
-      when Hash
-        value.each_with_object({}) do |(key, item), memo|
-          memo[key.to_sym] = symbolize_hash(item)
-        end
-      when Array
-        value.map { |item| symbolize_hash(item) }
-      else
-        value
-      end
-    end
   end
 
   class << self
@@ -308,7 +295,7 @@ module Rubot
 
       return [eval_or_name] if eval_or_name.is_a?(Class) && eval_or_name < Rubot::Eval
 
-      [Object.const_get(eval_or_name.to_s)]
+      [eval_or_name.to_s.constantize]
     rescue NameError => e
       raise ExecutionError, "Unable to resolve eval #{eval_or_name}: #{e.message}"
     end
