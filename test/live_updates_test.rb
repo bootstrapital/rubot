@@ -44,11 +44,17 @@ class LiveUpdatesTest < Minitest::Test
     calls = []
     run = Rubot::Run.new(name: "ExampleAgent", kind: :agent, input: {}, persist: false)
 
-    Rubot::LiveUpdates.stub(:broadcast_run, ->(persisted_run) { calls << persisted_run.id }) do
-      run.persist!
+    original_method = Rubot::LiveUpdates.method(:broadcast_run)
+    Rubot::LiveUpdates.define_singleton_method(:broadcast_run) do |persisted_run|
+      calls << persisted_run.id
     end
 
+    run.persist!
+
+    Rubot::LiveUpdates.define_singleton_method(:broadcast_run, original_method)
     assert_equal [run.id], calls
+  ensure
+    Rubot::LiveUpdates.define_singleton_method(:broadcast_run, original_method) if original_method
   end
 
   def test_broadcaster_replaces_run_and_approval_targets

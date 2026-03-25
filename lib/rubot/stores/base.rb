@@ -2,6 +2,8 @@
 
 module Rubot
   module Stores
+    # Public extension API: implement this interface for custom run stores.
+    # Optional execution-claim hooks are stable no-op extension points.
     class Base
       def save_run(_run)
         raise NotImplementedError, "#{self.class.name} must implement #save_run"

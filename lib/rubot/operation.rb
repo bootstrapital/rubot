@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module Rubot
+  # Provisional API: Rubot::Operation is the intended feature boundary,
+  # but its authoring surface may still tighten during v0.2.
   class Operation
     class << self
       def inherited(subclass)

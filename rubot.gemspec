@@ -20,6 +20,8 @@ Gem::Specification.new do |spec|
 
   spec.files = Dir.glob(%w[
     README.md
+    app/**/*
+    config/routes.rb
     lib/**/*.rb
     examples/**/*.rb
   ])

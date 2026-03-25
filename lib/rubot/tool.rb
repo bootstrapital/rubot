@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 module Rubot
+  # Public API: subclass Rubot::Tool for application actions.
+  # Stable subclass hooks are the DSL macros plus #call.
+  # Internal runtime methods like #execute are framework-owned.
   class Tool
     extend DSL
 
@@ -38,6 +41,7 @@ module Rubot
       raise NotImplementedError, "#{self.class.name} must implement #call"
     end
 
+    # Internal: Rubot runtime entrypoint used by workflows and agents.
     def execute(input:, run:)
       started_at = Rubot.configuration.time_source.call
       run.raise_if_canceled!

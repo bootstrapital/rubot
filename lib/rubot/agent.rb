@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 module Rubot
+  # Public API: subclass Rubot::Agent for reasoning participants.
+  # Stable subclass hooks are the DSL macros plus #perform.
+  # The provider/tool-loop internals below remain framework-owned.
   class Agent
     extend DSL
 

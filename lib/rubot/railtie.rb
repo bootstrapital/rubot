@@ -2,10 +2,19 @@
 
 require "rails/railtie"
 require_relative "engine"
+require_relative "config_file"
 
 module Rubot
   class Railtie < Rails::Railtie
     config.rubot = ActiveSupport::OrderedOptions.new
+
+    initializer "rubot.load_config_file" do
+      environment = Rails.env if defined?(Rails) && Rails.respond_to?(:env)
+      path = Rails.root.join("config", "rubot.yml") if defined?(Rails) && Rails.respond_to?(:root)
+      next unless path
+
+      Rubot::ConfigFile.apply(Rubot.configuration, Rubot::ConfigFile.load(path:, environment:))
+    end
 
     initializer "rubot.configure" do
       Rubot.configure do |config|

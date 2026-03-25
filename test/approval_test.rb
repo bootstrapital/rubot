@@ -25,7 +25,9 @@ class ApprovalTest < Minitest::Test
     approval = run.approvals.first
 
     assert_equal :waiting_for_approval, run.status
+    assert_equal "ops_manager", approval.role
     assert_equal "ops_manager", approval.role_requirement
+    assert_equal({ type: "String", id: "ops@example.com" }, approval.assigned_to)
     assert_equal "String", approval.assigned_to_type
     assert_equal "ops@example.com", approval.assigned_to_id
     assert_equal @now + 60, approval.sla_due_at

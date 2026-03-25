@@ -3,6 +3,8 @@
 require "rails/engine"
 
 module Rubot
+  # Provisional Rails surface: the engine is mountable today, but route
+  # shape and packaging may change while the admin UI is extracted in v0.2.
   class Engine < Rails::Engine
     isolate_namespace Rubot
 

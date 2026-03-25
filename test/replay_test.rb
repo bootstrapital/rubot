@@ -29,6 +29,7 @@ class ReplayTest < Minitest::Test
     assert_equal original.context, replay.context
     assert_equal original.trace_id, replay.trace_id
     assert_equal original.id, replay.replay_of_run_id
+    assert_equal original.id, replay.source_run_id
     assert_equal original.output, replay.output
   end
 end

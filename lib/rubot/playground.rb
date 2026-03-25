@@ -118,16 +118,51 @@ module Rubot
       def execute_tool(runnable, input:, context:, subject:)
         run = Rubot::Run.new(name: runnable.name, kind: :tool, input:, context:, subject:, persist: false)
         run.define_singleton_method(:persist!) { self }
-        run.add_event(Event.new(type: "run.started", payload: { name: run.name, kind: run.kind, input: run.input, subject: run.subject }))
+        run.add_event(
+          Event.new(
+            type: "run.started",
+            payload: {
+              run_id: run.id,
+              name: run.name,
+              runnable_name: run.runnable_name,
+              kind: run.kind,
+              run_kind: run.kind,
+              input: run.input,
+              subject: run.subject,
+              subject_ref: run.subject_ref&.to_h,
+              trace_id: run.trace_id
+            }.compact
+          )
+        )
         run.start!
         output = runnable.new.execute(input:, run:)
         run.complete!(output)
-        run.add_event(Event.new(type: "run.completed", payload: { output: run.output }))
+        run.add_event(
+          Event.new(
+            type: "run.completed",
+            payload: {
+              run_id: run.id,
+              runnable_name: run.runnable_name,
+              output: run.output,
+              trace_id: run.trace_id
+            }
+          )
+        )
         run
       rescue StandardError => e
         unless run.failed?
           run.fail!(class: e.class.name, message: e.message)
-          run.add_event(Event.new(type: "run.failed", payload: { error_class: e.class.name, error_message: e.message }))
+          run.add_event(
+            Event.new(
+              type: "run.failed",
+              payload: {
+                run_id: run.id,
+                runnable_name: run.runnable_name,
+                error_class: e.class.name,
+                error_message: e.message
+              }
+            )
+          )
         end
         raise
       end

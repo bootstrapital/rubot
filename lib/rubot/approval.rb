@@ -43,6 +43,19 @@ module Rubot
       status == :pending
     end
 
+    def role
+      role_requirement
+    end
+
+    def assigned_to
+      return if assigned_to_type.nil? && assigned_to_id.nil?
+
+      {
+        type: assigned_to_type,
+        id: assigned_to_id
+      }.compact
+    end
+
     def overdue?(time = Rubot.configuration.time_source.call)
       sla_due_at && pending? && time >= sla_due_at
     end
@@ -57,8 +70,10 @@ module Rubot
       {
         step_name: step_name,
         status: status,
+        role: role,
         assigned_to_type: assigned_to_type,
         assigned_to_id: assigned_to_id,
+        assigned_to: assigned_to,
         role_requirement: role_requirement,
         reason: reason,
         sla_due_at: sla_due_at&.iso8601,

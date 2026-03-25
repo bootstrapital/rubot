@@ -1,35 +1,73 @@
-# Rubot Admin Panel Frontend Architecture
+# Rubot Admin Mounting and Customization
 
-## Decision
+This guide documents the intended Rails integration story for the Rubot admin engine.
 
-Rubot should use a hybrid frontend architecture.
+The admin engine is currently a `provisional` API surface. See [`public_api.md`](./public_api.md) for the current contract boundary.
 
-- The built-in engine remains server-rendered Rails by default.
-- Presenter-backed JSON endpoints provide a stable contract for richer frontend-driven pages later.
-- Shared design tokens, shell layout, and reusable partials should serve both the engine UI and embedded app surfaces.
+## What the Admin Engine Owns
 
-This avoids locking Rubot into a one-off engine UI while also avoiding a premature SPA rewrite.
+Rubot ships a framework-owned admin surface for:
 
-## Why Hybrid
+- dashboard summary
+- runs index and run detail
+- approvals inbox
+- replay and trace inspection
+- developer playground
 
-- Rails views already fit Rubot's realtime and operator-heavy workflows well.
-- The current engine pages prove routing, presenters, approvals, and Turbo update paths.
-- A dedicated frontend app would add build, auth, and state complexity before the UI model is mature enough.
-- Stable JSON contracts let future React or other frontend layers reuse the same data model instead of scraping HTML.
+The intended split is:
 
-## Foundation Pieces
+- your Rails app owns product-facing routes, controllers, auth, and feature UI
+- Rubot owns the admin/governance surface mounted under a dedicated route
 
-- `rubot/application` layout provides the authenticated admin shell.
-- `DashboardController`, `RunsController`, and `ApprovalsController` now support presenter-backed admin pages.
-- `RunsController` and `ApprovalsController` also expose JSON contracts for frontend-driven clients.
-- Shared tokens in `app/assets/stylesheets/rubot/application.css` define typography, spacing, status color, and motion defaults.
-- Reusable UI primitives like stat cards and empty states establish a design baseline for later screens.
+In practice that usually means:
 
-## Auth Model
+- app UI under routes like `/`, `/ops/...`, or your product-specific paths
+- Rubot admin under `/rubot/admin/...`
 
-The engine should not hardcode authentication.
+## Recommended Mount Path
 
-Instead, host apps can configure:
+Mount the engine in your host app routes:
+
+```ruby
+# config/routes.rb
+Rails.application.routes.draw do
+  mount Rubot::Engine, at: "/rubot/admin"
+end
+```
+
+That gives you engine-owned routes such as:
+
+- `/rubot/admin`
+- `/rubot/admin/dashboard`
+- `/rubot/admin/runs`
+- `/rubot/admin/runs/:id`
+- `/rubot/admin/approvals`
+- `/rubot/admin/playground`
+
+The host app owns the outer mount path. The engine owns the routes inside that mount.
+
+## Install Flow
+
+For a Rails app using the built-in setup path:
+
+```bash
+bin/rails generate rubot:install
+bin/rails db:migrate
+```
+
+The install generator now:
+
+- mounts the engine at `/rubot/admin`
+- writes `config/initializers/rubot.rb`
+- creates the Active Record tables used by `Rubot::Stores::ActiveRecordStore`
+
+The generated initializer defaults to durable Active Record persistence for Rails installs.
+
+## Auth Hook
+
+Rubot does not hardcode admin authentication.
+
+Instead, configure `admin_authorizer` in your initializer:
 
 ```ruby
 Rubot.configure do |config|
@@ -39,20 +77,113 @@ Rubot.configure do |config|
 end
 ```
 
-That keeps Rubot Rails-native while allowing integration with existing admin auth systems.
+Rubot also supports an explicit controller argument:
 
-## Presenter Contract
+```ruby
+Rubot.configure do |config|
+  config.admin_authorizer = ->(controller) do
+    controller.authenticate_admin!
+  end
+end
+```
 
-The presenter contract is the backend boundary for admin pages.
+Supported forms today:
 
-- `RunPresenter#as_admin_json`
-- `ApprovalPresenter#as_admin_json`
-- `ToolCallPresenter#as_admin_json`
+- `-> { ... }` executed in the engine controller instance context
+- `->(controller) { ... }` with the engine controller passed explicitly
 
-This contract should be treated as the canonical shape for future frontend work.
+This hook is the framework-owned integration point for admin auth.
 
-## Next Steps
+## Runtime Authorization vs Admin Auth
 
-- Add metrics and trace surfaces on top of the shell.
-- Expand operation-aware screens and subject embedding.
-- Layer richer frontend-driven pages on top of the same presenter contract where interaction complexity justifies it.
+Keep these distinct:
+
+- `admin_authorizer` controls whether a request may enter the admin engine UI
+- `policy_adapter` controls runtime and admin action authorization decisions inside Rubot
+
+Example:
+
+```ruby
+Rubot.configure do |config|
+  config.admin_authorizer = ->(controller) { controller.authenticate_admin! }
+  config.policy_adapter = Rubot::Policy::PunditAdapter.new
+  config.policy_actor_resolver = ->(context, controller) do
+    context[:current_user] || controller&.current_user
+  end
+end
+```
+
+That split lets you reuse existing app auth while still enforcing Rubot action-level policy checks.
+
+## What Host Apps May Customize Safely
+
+Safe, supported host-app customization points today:
+
+- outer mount path in `config/routes.rb`
+- `admin_authorizer`
+- `policy_adapter` and `policy_actor_resolver`
+- store selection such as `Rubot::Stores::ActiveRecordStore`
+- provider configuration
+- subject memory configuration
+
+Useful admin-facing data contracts:
+
+- `Rubot::Presenters::RunPresenter#as_admin_json`
+- `Rubot::Presenters::ApprovalPresenter#as_admin_json`
+- `Rubot::Presenters::ToolCallPresenter#as_admin_json`
+
+These presenter contracts are useful for frontend-driven extensions, but remain `provisional` during `v0.2`.
+
+## What Rubot Owns
+
+These areas should be treated as engine-owned:
+
+- admin controllers
+- admin routes inside the mounted engine
+- shell layout and navigation structure
+- built-in views and partials
+- built-in admin CSS package
+- live-update broadcasting behavior
+
+You can override Rails engine views in a host app if you choose, but that is not yet a documented stable extension surface. Prefer configuration hooks and presenter contracts over partial overrides.
+
+## Layout and Asset Expectations
+
+Rubot packages its admin shell assets and views with the gem.
+
+Framework-owned pieces include:
+
+- layout: `rubot/application`
+- stylesheet: `rubot/application.css`
+- reusable views and partials under `app/views/rubot/...`
+
+The admin UI assumes the host app can serve standard Rails engine assets. It does not require the host app to adopt Rubot’s layout outside the mounted engine.
+
+## JSON and Frontend Expectations
+
+The engine remains server-rendered Rails by default.
+
+JSON endpoints exposed by the admin controllers are intended for richer frontend-driven clients later, not as a separate product UI contract for your normal app routes. Use them when you are extending the admin surface, not when building ordinary app-facing feature pages.
+
+## Product UI vs Admin UI
+
+The recommended model is:
+
+- product-facing controllers and pages live in your app
+- those entrypoints launch operations, workflows, or runs
+- the Rubot admin engine is the inspection and governance surface
+
+Put differently:
+
+- your app answers “how does the user do the work?”
+- Rubot admin answers “what happened, and how do operators inspect or govern it?”
+
+## Current Status
+
+Post-`029`, the admin engine is packaged as a framework-owned surface rather than an in-repo convenience:
+
+- engine runtime files are shipped in the gem
+- routes, views, helpers, assets, and controllers are packaged together
+- the auth hook contract is explicit
+
+That makes `/rubot/admin` the recommended adoption path for Rails teams today.

@@ -67,13 +67,19 @@ module Rubot
         run.replay_of_run_id
       end
 
+      def source_run_id
+        run.source_run_id
+      end
+
       def as_admin_json
         {
           id: id,
           name: name,
+          runnable_name: run.runnable_name,
           kind: run.kind,
           trace_id: trace_id,
           replay_of_run_id: replay_of_run_id,
+          source_run_id: source_run_id,
           status: run.status,
           current_step: run.current_step,
           started_at: run.started_at&.iso8601,

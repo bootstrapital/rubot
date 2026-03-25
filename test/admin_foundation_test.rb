@@ -12,6 +12,7 @@ class AdminFoundationTest < Minitest::Test
 
     assert_equal run.id, payload[:id]
     assert_equal "DemoAgent", payload[:name]
+    assert_equal "DemoAgent", payload[:runnable_name]
     assert_equal :agent, payload[:kind]
     assert_equal :completed, payload[:status]
     assert_equal({ summary: "done" }, payload[:output])
@@ -27,6 +28,7 @@ class AdminFoundationTest < Minitest::Test
 
     assert_equal run.id, payload[:run_id]
     assert_equal "review", payload[:step_name]
+    assert_equal "ops", payload[:role]
     assert_equal "ops", payload[:role_requirement]
     assert_equal "pending", payload[:status]
   end

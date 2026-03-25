@@ -16,7 +16,7 @@ module Rubot
       authorizer = Rubot.configuration.admin_authorizer
       return true unless authorizer
 
-      instance_exec(&authorizer)
+      authorizer.arity == 1 ? authorizer.call(self) : instance_exec(&authorizer)
     end
 
     def authorize_rubot_action!(action, run: nil, resource: nil)

@@ -30,6 +30,7 @@ module Rubot
       end
     end
 
+    # Public extension API for authorization adapters.
     class BaseAdapter
       def authorize!(_request)
         raise NotImplementedError, "#{self.class.name} must implement #authorize!"
@@ -134,13 +135,25 @@ module Rubot
       def record_denial!(run, request, error)
         return unless run
 
+        policy_target = request&.policy_target
+        resource_name =
+          if policy_target.respond_to?(:name)
+            policy_target.name
+          else
+            policy_target&.class&.name
+          end
+
         run.add_event(
           Event.new(
             type: "policy.denied",
             step_name: run.current_step,
             payload: {
               action: request&.action,
-              resource: request&.policy_target&.respond_to?(:name) ? request.policy_target.name : request&.policy_target&.class&.name,
+              resource: resource_name,
+              resource_name: resource_name,
+              runnable_name: request&.runnable&.name || run.name,
+              run_id: run.id,
+              subject_ref: run.subject_ref&.to_h,
               error_class: error.class.name,
               error_message: error.message
             }.compact

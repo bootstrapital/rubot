@@ -2,6 +2,7 @@
 
 module Rubot
   module Middleware
+    # Public extension API for agent/provider middleware entries.
     class Base
       attr_reader :app, :options
 
@@ -15,6 +16,7 @@ module Rubot
       end
     end
 
+    # Public convenience base for authorization-oriented middleware.
     class Authorization < Base
       def call(env)
         authorize!(env)
@@ -26,6 +28,7 @@ module Rubot
       end
     end
 
+    # Public convenience base for input/message guardrail middleware.
     class Guardrail < Base
       def call(env)
         guarded_env = env.dup
@@ -43,6 +46,7 @@ module Rubot
       end
     end
 
+    # Internal: runtime middleware composer.
     class Stack
       def initialize(entries, terminal)
         @app = entries.reverse.inject(terminal) do |app, entry|

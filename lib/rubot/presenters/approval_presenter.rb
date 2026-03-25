@@ -26,6 +26,10 @@ module Rubot
         approval.role_requirement || "unscoped"
       end
 
+      def role
+        approval.role || "unscoped"
+      end
+
       def reason
         approval.reason || "No reason supplied."
       end
@@ -39,9 +43,11 @@ module Rubot
           run_id: run_id,
           run_name: run_name,
           step_name: step_name,
+          role: role,
           role_requirement: role_requirement,
           reason: reason,
           status: status,
+          assigned_to: approval.assigned_to,
           assigned_to_type: approval.assigned_to_type,
           assigned_to_id: approval.assigned_to_id,
           sla_due_at: approval.sla_due_at&.iso8601,

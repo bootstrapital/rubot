@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 module Rubot
+  # Public API: Rubot::Run is the durable execution record returned by
+  # Rubot.run / Rubot.enqueue resume flows. Treat metadata internals such
+  # as checkpoints storage under state[:_rubot] as internal.
   class Run
     STATUSES = %i[queued running waiting_for_approval completed failed canceled].freeze
 
@@ -82,6 +85,21 @@ module Rubot
 
     def replay?
       !replay_of_run_id.nil?
+    end
+
+    def runnable_name
+      name
+    end
+
+    def source_run_id
+      replay_of_run_id
+    end
+
+    def public_state
+      sanitized = state.dup
+      sanitized.delete(:_rubot)
+      sanitized.delete("_rubot")
+      sanitized
     end
 
     def start!
@@ -240,6 +258,7 @@ module Rubot
       {
         id: id,
         name: name,
+        runnable_name: runnable_name,
         kind: kind,
         status: status,
         current_step: current_step,
@@ -252,6 +271,7 @@ module Rubot
         context: context,
         trace_id: trace_id,
         replay_of_run_id: replay_of_run_id,
+        source_run_id: source_run_id,
         cancellation_requested_at: cancellation_requested_at&.iso8601,
         canceled_at: canceled_at&.iso8601,
         approvals: approvals.map(&:to_h),

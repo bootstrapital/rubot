@@ -88,6 +88,10 @@ class PolicyTest < Minitest::Test
     assert_match(/Not authorized/, error.message)
     assert_equal :failed, run.status
     assert_includes run.events.map(&:type), "policy.denied"
+    payload = run.events.find { |event| event.type == "policy.denied" }.payload
+    assert_equal PolicyTool.name, payload[:resource_name]
+    assert_equal PolicyWorkflow.name, payload[:runnable_name]
+    assert_equal run.id, payload[:run_id]
   end
 
   def test_runtime_allows_authorized_runs

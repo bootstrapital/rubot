@@ -5,14 +5,15 @@ class <%= class_name %>Workflow < Rubot::Workflow
 
   def load_context
     run.state[:brief] = {
-      summary: "Review #{@run.input[:subject_id]}"
+      summary: "Review #{run.input[:subject_id]}"
     }
   end
 
   def finalize
     run.state[:result] = {
       outcome: "approved",
-      brief: run.state[:brief]
+      approved_by: run.approvals.last&.decision_payload&.fetch(:approved_by, nil),
+      brief: run.state.fetch(:brief)
     }
   end
 end

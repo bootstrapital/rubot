@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 module Rubot
+  # Public API: subclass Rubot::Workflow for ordered orchestration.
+  # Stable subclass hooks are the step DSL and instance step methods.
+  # Resume/checkpoint internals remain framework-owned.
   class Workflow
     extend DSL
 

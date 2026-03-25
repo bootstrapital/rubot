@@ -4,6 +4,8 @@ Rubot.configure do |config|
     Rails.logger.info("[rubot] #{run.id} #{event.type} #{event.payload.to_json}")
   end
 
-  # Replace with an Active Record-backed store in production.
-  config.store = Rubot::Stores::MemoryStore.new
+  # The install generator also creates the Rubot tables, so default to the
+  # Active Record-backed store. For local-only demos, MemoryStore is still
+  # available as a lightweight alternative.
+  config.store = Rubot::Stores::ActiveRecordStore.new
 end

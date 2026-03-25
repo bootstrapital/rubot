@@ -104,14 +104,7 @@ module Rubot
       run.add_event(
         Event.new(
           type: "run.started",
-          payload: {
-            name: run.name,
-            kind: run.kind,
-            input: run.input,
-            subject: run.subject,
-            trace_id: run.trace_id,
-            replay_of_run_id: run.replay_of_run_id
-          }.compact
+          payload: run_event_payload(run)
         )
       )
       run.start!
@@ -135,7 +128,20 @@ module Rubot
       return unless run.completed?
       return if run.events.any? { |event| event.type == "run.completed" }
 
-      run.add_event(Event.new(type: "run.completed", step_name: run.current_step, payload: { output: run.output }))
+      run.add_event(
+        Event.new(
+          type: "run.completed",
+          step_name: run.current_step,
+          payload: {
+            run_id: run.id,
+            runnable_name: run.runnable_name,
+            output: run.output,
+            trace_id: run.trace_id,
+            replay_of_run_id: run.replay_of_run_id,
+            source_run_id: run.source_run_id
+          }.compact
+        )
+      )
     end
 
     def acquire_execution_claim(run)
@@ -166,6 +172,22 @@ module Rubot
 
     def supports_execution_claims?
       Rubot.store.respond_to?(:execution_claims_supported?) && Rubot.store.execution_claims_supported?
+    end
+
+    def run_event_payload(run)
+      {
+        run_id: run.id,
+        name: run.name,
+        runnable_name: run.runnable_name,
+        kind: run.kind,
+        run_kind: run.kind,
+        input: run.input,
+        subject: run.subject,
+        subject_ref: run.subject_ref&.to_h,
+        trace_id: run.trace_id,
+        replay_of_run_id: run.replay_of_run_id,
+        source_run_id: run.source_run_id
+      }.compact
     end
   end
 end

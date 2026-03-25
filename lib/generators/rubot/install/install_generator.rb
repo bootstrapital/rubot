@@ -23,7 +23,7 @@ module Rubot
       end
 
       def mount_engine
-        route 'mount Rubot::Engine => "/rubot"'
+        route 'mount Rubot::Engine => "/rubot/admin"'
       end
     end
   end

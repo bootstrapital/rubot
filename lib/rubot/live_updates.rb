@@ -4,7 +4,7 @@ module Rubot
   module LiveUpdates
     class << self
       def enabled?
-        defined?(Turbo::StreamsChannel) && defined?(Rubot::ApplicationController)
+        feature_enabled?(:admin_live_updates) && defined?(Turbo::StreamsChannel) && defined?(Rubot::ApplicationController)
       end
 
       def broadcast_run(run)
@@ -45,6 +45,12 @@ module Rubot
 
       def run_timeline_dom_id(run_id)
         "rubot_run_timeline_#{run_id}"
+      end
+
+      private
+
+      def feature_enabled?(name)
+        Rubot.configuration.features.fetch(name.to_sym, true)
       end
     end
 
