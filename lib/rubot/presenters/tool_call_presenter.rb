@@ -81,7 +81,7 @@ module Rubot
       end
 
       def tool_class
-        Object.const_get(name) if Object.const_defined?(name)
+        name.safe_constantize
       rescue NameError
         nil
       end

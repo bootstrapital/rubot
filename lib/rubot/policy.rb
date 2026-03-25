@@ -22,7 +22,7 @@ module Rubot
         return target.rubot_policy if target.respond_to?(:rubot_policy)
 
         if run && Object.const_defined?(run.name)
-          runnable_class = Object.const_get(run.name)
+          runnable_class = run.name.constantize
           return runnable_class.rubot_policy if runnable_class.respond_to?(:rubot_policy)
         end
 
@@ -57,9 +57,9 @@ module Rubot
         when Class
           definition
         when String, Symbol
-          Object.const_get(definition.to_s)
+          definition.to_s.constantize
         when NilClass
-          return Object.const_get("RubotPolicy") if Object.const_defined?("RubotPolicy")
+          return "RubotPolicy".constantize if Object.const_defined?("RubotPolicy")
 
           raise Rubot::AuthorizationError, "No Pundit policy configured for #{request.policy_target || request.run}"
         else
@@ -93,7 +93,7 @@ module Rubot
         return request.controller.current_ability if request.controller&.respond_to?(:current_ability)
         raise Rubot::AuthorizationError, "CanCanCan ability #{ability_class_name} is not defined" unless Object.const_defined?(ability_class_name)
 
-        Object.const_get(ability_class_name).new(actor)
+        ability_class_name.constantize.new(actor)
       end
     end
 

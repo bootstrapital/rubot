@@ -189,7 +189,7 @@ module Rubot
     end
 
     def normalize_provider_output(result)
-      return symbolize_hash(result.output) if result.output
+      return Rubot::HashUtils.symbolize(result.output) if result.output
 
       parsed = parse_json_content(result.content)
       return parsed if parsed
@@ -201,13 +201,13 @@ module Rubot
       registry = tool_registry(tool_classes)
 
       Array(tool_calls).map do |tool_call|
-        normalized_call = symbolize_hash(tool_call)
+        normalized_call = Rubot::HashUtils.symbolize(tool_call)
         tool_name = normalized_call[:name] || normalized_call[:tool_name] || normalized_call.dig(:function, :name)
         tool_class = registry[tool_name]
         raise Rubot::ExecutionError, "#{self.class.name} requested unknown tool #{tool_name}" unless tool_class
 
         raw_arguments = normalized_call[:arguments] || normalized_call.dig(:function, :arguments) || {}
-        arguments = raw_arguments.is_a?(String) ? parse_json_content(raw_arguments) : symbolize_hash(raw_arguments)
+        arguments = raw_arguments.is_a?(String) ? parse_json_content(raw_arguments) : Rubot::HashUtils.symbolize(raw_arguments)
         raise Rubot::ExecutionError, "#{self.class.name} provided invalid arguments for #{tool_name}" unless arguments.is_a?(Hash)
 
         output = tool_class.new.execute(input: arguments, run: run)
@@ -322,22 +322,9 @@ module Rubot
     def parse_json_content(content)
       return unless content.is_a?(String) && !content.strip.empty?
 
-      symbolize_hash(JSON.parse(content))
+      JSON.parse(content, symbolize_names: true)
     rescue JSON::ParserError
       nil
-    end
-
-    def symbolize_hash(value)
-      case value
-      when Array
-        value.map { |item| symbolize_hash(item) }
-      when Hash
-        value.each_with_object({}) do |(key, nested_value), memo|
-          memo[key.respond_to?(:to_sym) ? key.to_sym : key] = symbolize_hash(nested_value)
-        end
-      else
-        value
-      end
     end
   end
 end

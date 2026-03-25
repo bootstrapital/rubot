@@ -82,7 +82,7 @@ class SubjectMemoryTest < Minitest::Test
 
     assert_equal "Ticket", run.subject_type
     assert_equal "t_123", run.subject_id
-    assert_equal "Ticket:t_123", run.subject_key
+    assert_equal "gid://rubot/Ticket/t_123", run.subject_key
   end
 
   def test_store_can_find_runs_for_a_subject

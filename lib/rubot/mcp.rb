@@ -51,7 +51,7 @@ module Rubot
         tool_namespace = ensure_namespace(@namespace)
 
         Array(@client.list_tools).map do |descriptor|
-          normalized = symbolize_hash(descriptor)
+          normalized = Rubot::HashUtils.symbolize(descriptor)
           class_name = normalize_class_name(normalized[:name])
           tool_class =
             if tool_namespace.const_defined?(class_name, false)
@@ -84,19 +84,6 @@ module Rubot
       def normalize_class_name(name)
         segments = name.to_s.split(/[^a-zA-Z0-9]+/).reject(&:empty?)
         "#{segments.map { |segment| segment[0].upcase + segment[1..] }.join}Tool"
-      end
-
-      def symbolize_hash(value)
-        case value
-        when Array
-          value.map { |item| symbolize_hash(item) }
-        when Hash
-          value.each_with_object({}) do |(key, nested_value), memo|
-            memo[key.respond_to?(:to_sym) ? key.to_sym : key] = symbolize_hash(nested_value)
-          end
-        else
-          value
-        end
       end
     end
   end

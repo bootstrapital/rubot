@@ -3,35 +3,40 @@
 module Rubot
   module Subject
     class Reference
-      attr_reader :type, :id
+      attr_reader :gid
 
-      def initialize(type:, id:)
-        @type = type
-        @id = id&.to_s
+      def initialize(gid)
+        @gid = gid.is_a?(GlobalID) ? gid : GlobalID.parse(gid)
       end
 
       def present?
-        !type.to_s.empty? && !id.to_s.empty?
+        !gid.nil?
       end
 
       def key
-        return unless present?
+        gid&.to_s
+      end
 
-        "#{type}:#{id}"
+      def type
+        gid&.model_name
+      end
+
+      def id
+        gid&.model_id
       end
 
       def ==(other)
-        other.is_a?(Reference) && other.type == type && other.id == id
+        other.is_a?(Reference) && other.gid == gid
       end
 
       alias eql? ==
 
       def hash
-        [type, id].hash
+        gid.hash
       end
 
       def to_h
-        { type:, id: }
+        { type: type, id: id, gid: key }.compact
       end
     end
 
@@ -40,17 +45,36 @@ module Rubot
         return subject if subject.is_a?(Reference)
         return unless subject
 
-        type = subject.class.name
-        id = subject.respond_to?(:id) ? subject.id : nil
-        return unless type && id
+        gid = subject.respond_to?(:to_global_id) ? subject.to_global_id : nil
 
-        Reference.new(type:, id:)
+        # Fallback for models not using GlobalID directly but having class and ID
+        if gid.nil?
+          type = subject.class.name
+          id = subject.respond_to?(:id) ? subject.id : nil
+          return unless type && id
+
+          # We don't want to enforce GlobalID strictly if the app doesn't configure it for this model
+          # but we need to support old behavior to keep backward compatibility.
+          # Actually, since we're refactoring to use GlobalID natively, let's create one.
+          gid = GlobalID.new(URI::GID.build(app: GlobalID.app || "rubot", model_name: type, model_id: id))
+        end
+
+        Reference.new(gid)
       end
 
-      def resolve(subject = nil, type: nil, id: nil)
+      def resolve(subject = nil, type: nil, id: nil, gid: nil)
         return subject if subject && !subject.is_a?(Reference)
 
-        reference = subject.is_a?(Reference) ? subject : Reference.new(type:, id:)
+        if gid
+          reference = Reference.new(gid)
+        elsif subject.is_a?(Reference)
+          reference = subject
+        elsif type && id
+          reference = Reference.new(GlobalID.new(URI::GID.build(app: GlobalID.app || "rubot", model_name: type, model_id: id)))
+        else
+          return nil
+        end
+
         return unless reference.present?
 
         custom = Rubot.configuration.subject_locator
@@ -70,9 +94,14 @@ module Rubot
       private
 
       def default_resolve(reference)
-        return unless Object.const_defined?(reference.type)
+        # Try to use GlobalID natively first
+        record = GlobalID::Locator.locate(reference.gid)
+        return record if record
 
-        klass = Object.const_get(reference.type)
+        # Fallback to the old strategy if GlobalID locator fails (e.g. non-AR objects)
+        klass = reference.type.safe_constantize
+        return unless klass
+
         return klass.find_by(id: reference.id) if klass.respond_to?(:find_by)
         return klass.find(reference.id) if klass.respond_to?(:find)
 

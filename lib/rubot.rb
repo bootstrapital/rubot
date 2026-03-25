@@ -1,10 +1,14 @@
 # frozen_string_literal: true
 
 require "json"
+require "active_support/core_ext/hash/keys"
+require "active_support/core_ext/string/inflections"
 require "securerandom"
 require "time"
+require "globalid"
 
 require_relative "rubot/version"
+require_relative "rubot/hash_utils"
 require_relative "rubot/errors"
 require_relative "rubot/configuration"
 require_relative "rubot/metrics"

@@ -28,7 +28,16 @@ module Rubot
           options: options
         }
 
-        response = transport.complete(request)
+        response = begin
+          transport.complete(request)
+        rescue => e
+          if defined?(::RubyLLM::Error) && e.is_a?(::RubyLLM::Error)
+            raise Rubot::RetryableError.new("Provider error: #{e.message}", category: :provider_retryable)
+          else
+            raise
+          end
+        end
+
         normalize_result(response, request: request)
       end
 
@@ -36,7 +45,7 @@ module Rubot
 
       def normalize_messages(messages)
         Array(messages).map do |message|
-          normalized = symbolize_hash(message)
+          normalized = Rubot::HashUtils.symbolize(message)
           {
             role: normalized.fetch(:role).to_s,
             content: normalized[:content],
@@ -65,7 +74,7 @@ module Rubot
       end
 
       def normalize_result(response, request:)
-        normalized = response.respond_to?(:to_h) ? symbolize_hash(response.to_h) : symbolize_hash(response)
+        normalized = Rubot::HashUtils.symbolize(response.respond_to?(:to_h) ? response.to_h : response)
         tool_calls = normalize_tool_calls(normalized[:tool_calls])
         output = normalize_output_payload(normalized, request:, tool_calls:)
 
@@ -84,14 +93,14 @@ module Rubot
       def parse_json_content(content)
         return unless content.is_a?(String) && !content.strip.empty?
 
-        symbolize_hash(JSON.parse(content))
+        JSON.parse(content, symbolize_names: true)
       rescue JSON::ParserError
         nil
       end
 
       def normalize_tool_calls(tool_calls)
         Array(tool_calls).map do |tool_call|
-          normalized = symbolize_hash(tool_call)
+          normalized = Rubot::HashUtils.symbolize(tool_call)
           arguments = normalized[:arguments] || normalized.dig(:function, :arguments)
           normalized[:arguments] = parse_arguments(arguments)
           normalized
@@ -101,7 +110,7 @@ module Rubot
       def normalize_usage(usage)
         return unless usage
 
-        usage = symbolize_hash(usage)
+        usage = Rubot::HashUtils.symbolize(usage)
         {
           input_tokens: usage[:input_tokens] || usage[:prompt_tokens],
           output_tokens: usage[:output_tokens] || usage[:completion_tokens],
@@ -135,9 +144,9 @@ module Rubot
       def parse_arguments(arguments)
         case arguments
         when String
-          symbolize_hash(JSON.parse(arguments))
+          JSON.parse(arguments, symbolize_names: true)
         when Hash
-          symbolize_hash(arguments)
+          Rubot::HashUtils.symbolize(arguments)
         else
           arguments
         end

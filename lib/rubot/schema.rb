@@ -81,7 +81,7 @@ module Rubot
     end
 
     def validate!(payload)
-      payload = symbolize_hash(payload || {})
+      payload = Rubot::HashUtils.symbolize(payload || {})
 
       fields.each do |field|
         value = payload[field.name]
@@ -131,13 +131,6 @@ module Rubot
       else :string
       end
     end
-
-    def symbolize_hash(payload)
-      payload.each_with_object({}) do |(key, value), memo|
-        memo[key.respond_to?(:to_sym) ? key.to_sym : key] = value
-      end
-    end
-
     def validate_type!(field, value)
       if field.type == :array
         raise ValidationError, "#{field.name} must be an Array" unless value.is_a?(Array)
