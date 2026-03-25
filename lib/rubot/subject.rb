@@ -3,6 +3,12 @@
 module Rubot
   module Subject
     class Reference
+      class << self
+        def from_parts(type:, id:)
+          new(GlobalID.new(URI::GID.build(app: GlobalID.app || "rubot", model_name: type, model_id: id)))
+        end
+      end
+
       attr_reader :gid
 
       def initialize(gid)
@@ -46,6 +52,8 @@ module Rubot
         return unless subject
 
         gid = subject.respond_to?(:to_global_id) ? subject.to_global_id : nil
+        gid ||= GlobalID.parse(subject) if subject.is_a?(String)
+
 
         # Fallback for models not using GlobalID directly but having class and ID
         if gid.nil?
@@ -56,7 +64,7 @@ module Rubot
           # We don't want to enforce GlobalID strictly if the app doesn't configure it for this model
           # but we need to support old behavior to keep backward compatibility.
           # Actually, since we're refactoring to use GlobalID natively, let's create one.
-          gid = GlobalID.new(URI::GID.build(app: GlobalID.app || "rubot", model_name: type, model_id: id))
+          return Reference.from_parts(type: type, id: id)
         end
 
         Reference.new(gid)
@@ -70,7 +78,7 @@ module Rubot
         elsif subject.is_a?(Reference)
           reference = subject
         elsif type && id
-          reference = Reference.new(GlobalID.new(URI::GID.build(app: GlobalID.app || "rubot", model_name: type, model_id: id)))
+          reference = Reference.from_parts(type: type, id: id)
         else
           return nil
         end
