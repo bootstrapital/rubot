@@ -31,6 +31,8 @@ For small use cases, that should fit in one place. For larger systems, the same 
 
 Rubot should therefore feel like a Rails extension, not a parallel application framework.
 
+Just as important, Rubot is not meant for every model-powered task. If a problem is a one-off script, normal Ruby code is often enough. Rubot becomes valuable when the task needs durable state, human review, auditability, resumability, and framework-level contracts around model input and output.
+
 ## Current State
 
 Today, Rubot already includes real support for:
@@ -119,6 +121,14 @@ A workflow coordinates:
 - branching
 - resumptions
 
+Workflows are also where business policy should live. A useful rule of thumb is:
+
+- tools gather facts
+- agents produce structured judgment
+- workflows decide what actually happens
+
+That separation keeps the model advisory rather than authoritative.
+
 An operation may contain one workflow or multiple workflows.
 
 Current Rubot state:
@@ -145,6 +155,8 @@ An agent may have:
 - memory configuration
 - middleware
 
+In the common case, an agent can often be just instructions plus schemas. That is enough for Rubot to call the configured provider and parse structured output without a custom `perform` method.
+
 In the desired state, agent properties can be partly dynamic at runtime, especially:
 
 - instructions
@@ -156,6 +168,7 @@ Current Rubot state:
 - dynamic resolution for instructions, model, and tools already exists
 - middleware already wraps agent/provider execution
 - provider-backed agents and plain-Ruby agents are both supported
+- schema-backed agents make it easier to turn model flakiness into ordinary framework errors instead of ad hoc parsing code
 
 ### Tool
 
@@ -250,6 +263,8 @@ Events are the backbone of:
 - operator UI
 - replay
 - observability
+
+This is especially important for AI-assisted workflows. If someone asks why a request was auto-approved or routed a certain way, events are the framework's built-in flight recorder.
 
 ### Memory
 

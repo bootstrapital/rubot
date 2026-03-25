@@ -11,6 +11,12 @@ It gives you a small set of primitives:
 
 Rubot is designed so product UI stays in your app, while execution logic lives in tools, agents, workflows, and operations.
 
+## When Rubot Fits
+
+Rubot is for production workflows, not one-off scripts.
+
+If you just want to fetch a page and ask a model for an opinion once, a small Ruby script is usually simpler. Rubot starts to pay for itself when the process needs durable state, approvals, resumability, schema enforcement, event history, and testing seams inside a Rails app.
+
 ## Example: a tool
 
 ```ruby

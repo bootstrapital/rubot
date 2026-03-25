@@ -6,6 +6,8 @@ This guide is the shortest path from zero to a running Rubot workflow, but it al
 
 Rubot is a Rails-native framework for building agentic internal tools with workflow state, approvals, and human oversight.
 
+If you only need a one-off script, Rubot is usually too much. The framework becomes useful when an AI-assisted task needs to live as a durable business process with checkpoints, approvals, auditability, and predictable failure handling.
+
 The intended Rails shape is:
 
 - app routes, controllers, and views compose the product-facing UI
@@ -96,6 +98,8 @@ class TriageTicketAgent < Rubot::Agent
 end
 ```
 
+In the zero-config path, Rubot can use the agent's instructions and schemas directly to produce structured output. Add a custom `perform` only when you need bespoke control over provider calls or tool use.
+
 Configure the provider once:
 
 ```ruby
@@ -130,6 +134,8 @@ class TicketTriageWorkflow < Rubot::Workflow
 end
 ```
 
+The important pattern is: the agent advises, the workflow decides. Let the model return structured judgment, then let normal Ruby workflow code enforce thresholds, approvals, and final business rules.
+
 ### 4. Run and resume it
 
 ```ruby
@@ -153,6 +159,13 @@ Workflow output defaults to a public snapshot of the final `run.state`. Internal
 - `run.events` is the execution timeline
 - `run.approvals` holds approval records
 - `run.output` is the workflow's final public state snapshot
+
+In practice, a useful split is:
+
+- tools return facts
+- agents return judgment
+- workflows own control flow and policy
+- operations provide the app-facing feature boundary
 
 ## Developer Experience Choices
 
@@ -309,6 +322,8 @@ Active Record-backed execution also includes:
 - durable step checkpoints
 - duplicate execution-claim protection for resume jobs
 - cancellation support via `run.request_cancellation!`
+
+This is one of Rubot's biggest practical advantages. A human approval that pauses a run for three days is still the same durable run, with the same state and trace history, rather than a custom state machine you have to rebuild for each feature.
 
 ## Global YAML Config
 
