@@ -2,6 +2,8 @@
 
 module Rubot
   class ApplicationController < ActionController::Base
+    include Rubot::UiHelper
+
     layout "rubot/application"
     before_action :authorize_rubot_admin!
     helper_method :rubot_navigation

@@ -2,6 +2,8 @@ PATH
   remote: ..
   specs:
     rubot (0.1.0)
+      activesupport
+      globalid
       json
 
 GEM
