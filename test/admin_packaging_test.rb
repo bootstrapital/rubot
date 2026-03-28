@@ -11,7 +11,11 @@ end
 
 if defined?(Rubot::ApplicationController)
   class AdminPackagingController < Rubot::ApplicationController
-    public :authorize_rubot_admin!
+    def authorize_for_test!
+      authorize_rubot_admin!
+    end
+
+    public :authorize_for_test!
   end
 end
 
@@ -31,7 +35,7 @@ class AdminPackagingTest < Minitest::Test
       config.admin_authorizer = -> { called = true }
     end
 
-    assert AdminPackagingController.new.authorize_rubot_admin!
+    assert AdminPackagingController.new.authorize_for_test!
     assert called
   end
 
@@ -49,7 +53,7 @@ class AdminPackagingTest < Minitest::Test
 
     controller = AdminPackagingController.new
 
-    assert controller.authorize_rubot_admin!
+    assert controller.authorize_for_test!
     assert_same controller, received
   end
 end

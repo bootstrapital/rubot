@@ -1,873 +1,371 @@
-# Rubot API Nouns and Verbs
+# From Quickstart To Advanced Operations
 
-This document explains Rubot's desired-state API shape while also calling out the major pieces that already exist in the codebase today. The goal is to make the conceptual model explicit so the framework can evolve toward a coherent developer experience instead of accumulating unrelated primitives.
+This guide is for the point where the quickstart stops being enough.
 
-The anchor idea is:
+In the quickstart, Rubot can look simple:
 
-- `Operation` is the top-level product and authoring primitive.
-- `Workflow` is the execution graph inside an operation.
-- `Agent` is the reasoning primitive.
-- `Tool` is the explicit action primitive.
+- define a tool
+- define an agent
+- define a workflow
+- run it
 
-In Rails terms, that does **not** mean `Operation` replaces controllers, routes, or app views.
-The desired model is:
+That is enough to learn the runtime.
 
-- the Rails app owns request handling, page composition, uploads, auth, and surrounding product UI
-- the `Operation` owns the business/runtime feature boundary
-- the Rubot admin surface owns cross-operation inspection and governance
+As soon as the feature gets more real, though, you run into a different set of questions:
 
-## Design Intent
+- when is a workflow enough?
+- when should I introduce an operation?
+- where should tools, agents, and workflows live?
+- what belongs in the Rails app versus in Rubot?
 
-Rubot should let developers build internal software with AI the same way they build normal application features:
+This document answers those questions.
 
-- define a business unit of work
-- attach execution logic
-- attach triggers
-- attach UI
-- attach policies
-- inspect and govern the resulting runs
+Rails is still the strongest in-process host path for Rubot today, but the architectural distinctions here matter more broadly than a Rails-only framing. They are what make Rubot useful as code-owned workflow infrastructure rather than just a handful of helper APIs.
 
-For small use cases, that should fit in one place. For larger systems, the same concepts should split cleanly into separate files and modules.
+## The Short Version
 
-Rubot should therefore feel like a Rails extension, not a parallel application framework.
+Use the primitives like this:
 
-Just as important, Rubot is not meant for every model-powered task. If a problem is a one-off script, normal Ruby code is often enough. Rubot becomes valuable when the task needs durable state, human review, auditability, resumability, and framework-level contracts around model input and output.
+- `Tool`: an explicit application action
+- `Agent`: a reasoning participant
+- `Workflow`: the ordered execution graph
+- `Operation`: the business capability that packages one or more workflows
 
-## Current State
+The most important distinction is:
 
-Today, Rubot already includes real support for:
+- a `Workflow` is the procedure
+- an `Operation` is the business capability that packages one or more workflows
+
+If you remember only one thing, remember that.
+
+## Start Simple
+
+The quickstart path is intentionally small.
+
+For a simple feature, you can often think like this:
+
+- one workflow
+- one or two tools
+- maybe one agent
+- maybe one approval
+
+At that stage, the workflow often feels like the whole feature.
+
+That is fine.
+
+You do **not** need to introduce `Operation` on day one just to be "proper."
+If the feature is small and the workflow is the whole story, starting with a workflow is a good move.
+
+## When A Workflow Is Enough
+
+Use a bare workflow when:
+
+- there is one obvious execution path
+- the feature is small
+- there is little shared configuration around it
+- you are still proving the workflow shape
+- there is no need yet for multiple entrypoints or grouped feature packaging
+
+In other words, a workflow is enough when the execution graph and the business capability are basically the same thing.
+
+Example:
+
+- `TicketTriageWorkflow`
+- `RefundReviewWorkflow`
+- `ResumeScreeningWorkflow`
+
+In those cases, introducing `Operation` too early can feel like ceremony.
+
+## When To Introduce An Operation
+
+Introduce an operation when the feature becomes bigger than one execution graph.
+
+That usually happens when one or more of these become true:
+
+- the feature has multiple related workflows
+- the feature has multiple entrypoints or triggers
+- workflows share the same tools or agents
+- the feature needs a stronger business name than one workflow class
+- the feature is becoming something you want to package, reuse, or ship as a unit
+
+Examples:
+
+- `RefundReviewOperation`
+- `CustomerEscalationOperation`
+- `ProcessImprovementOperation`
+
+An operation is where you stop thinking only about "how this run executes" and start thinking about "how this business capability is organized."
+
+## Operation Vs Workflow
+
+This is the line that matters most.
+
+### Workflow
+
+A workflow is the execution graph.
+
+It owns:
+
+- ordered steps
+- tool calls
+- agent calls
+- approvals
+- branching
+- resumability
+
+It answers:
+
+- what steps happen?
+- in what order?
+- where does human review happen?
+- what happens after approval or rejection?
+
+### Operation
+
+An operation is the business capability.
+
+It owns:
+
+- one or more workflows
+- operation-local tools and agents
+- triggers and launch rules
+- named entrypoints
+- the public shape of the capability
+
+It answers:
+
+- what business capability does this represent?
+- what workflows belong to it?
+- how does the app launch it?
+- what are the named entrypoints into this capability?
+
+## A Useful Rule Of Thumb
+
+Ask two questions:
+
+1. "Am I describing one execution path?"
+2. "Or am I describing a business capability with multiple paths and shared pieces?"
+
+If it is one execution path, start with a workflow.
+
+If it is a business capability, use an operation and let workflows live inside it.
+
+## How The Pieces Fit
+
+The normal layering should be:
+
+- tools gather or change facts
+- agents produce structured judgment
+- workflows control sequence and policy
+- operations package the business capability
+- the Rails app handles routes, controllers, auth, uploads, and product UI
+
+That separation matters because it keeps model output advisory rather than authoritative.
+
+It also matters because it gives generated or hand-written operational software a durable structure. The code can be produced quickly, but it still lands in explicit boundaries instead of dissolving into ad hoc service objects or prompt glue.
+
+A useful operating rule is:
+
+- tools gather facts
+- agents make proposals
+- workflows decide what actually happens
+- operations decide how the business capability is presented and entered
+
+## Inline Vs Separate Files
+
+For small features, it should be possible to define workflows inline inside an operation.
+
+For larger features, it should be possible to split workflows into separate files and point the operation at them.
+
+Both styles are valid.
+
+### Inline Is Good When
+
+- the feature is small
+- the workflow is short
+- the tools and agents are local to that capability
+- keeping the capability in one place improves readability
+
+### Separate Files Are Better When
+
+- the workflow is long
+- the operation owns multiple workflows
+- tools or agents are shared
+- the feature is part of a package or library
+- testing and maintenance need clearer seams
+
+That is similar to:
+
+- a small single-file Flask app
+- versus a more modular app using blueprints or separate modules
+
+The important part is that the framework should support both without making either one feel second-class.
+
+## The Progression Most Teams Follow
+
+Most features should grow like this:
+
+### Stage 1: One Workflow
+
+You start with:
+
+- one tool
+- one agent
+- one workflow
+
+This is enough to prove the runtime behavior.
+
+### Stage 2: One Operation Around One Workflow
+
+You introduce an operation when the feature needs:
+
+- a better business name
+- triggers
+- a cleaner app-facing launch boundary
+- shared packaging
+
+At this point, the operation may still point at only one workflow.
+
+That is okay.
+
+### Stage 3: One Operation, Multiple Workflows
+
+This is where `Operation` becomes clearly valuable.
+
+Examples:
+
+- current-state mapping workflow
+- future-state design workflow
+- SOP generation workflow
+
+They belong to the same feature, share tools and agents, but are not the same execution path.
+
+That is the point where using workflows alone starts to feel awkward.
+
+## Example Mental Model
+
+Take a process improvement capability.
+
+You might have:
+
+- `ProcessImprovementOperation`
+- `CurrentStateWorkflow`
+- `FutureStateWorkflow`
+- `SopDraftWorkflow`
+
+Shared tools:
+
+- load process brief
+- fetch artifacts
+- export map
+
+Shared agents:
+
+- current state analyst
+- future state designer
+- SOP drafter
+
+The operation is the capability.
+The workflows are the concrete paths inside it.
+
+That is a stronger shape than trying to make one giant workflow do everything.
+
+## What Belongs In Rails Vs Rubot
+
+Rubot does not replace your Rails app.
+
+A good boundary is:
+
+Rails app owns:
+
+- routes
+- controllers
+- page composition
+- auth
+- uploads
+- the surrounding product UI
+
+Rubot owns:
+
+- tools
+- agents
+- workflows
+- operations
+- approvals
+- run history
+- trace and operator inspection
+
+That boundary is one of the reasons Rubot works well as workflow infrastructure built on Rails: the host app remains the host, while Rubot owns the execution and governance layer.
+
+So in Rails terms:
+
+- controllers should usually launch operations or workflows
+- operations should own the business capability runtime boundary
+- workflows should own execution logic
+
+## What Exists In Rubot Today
+
+Today Rubot supports:
 
 - `Tool`
 - `Agent`
 - `Workflow`
 - `Operation`
 - `Run`, `Approval`, and `Event`
-- provider-backed agents
-- Active Job-backed execution
+- provider-backed and plain-Ruby agents
 - replay and evals
-- a mountable admin engine
-- memory processors
+- a mounted admin surface
 - dynamic agent resolution
 - middleware
-- policy adapters
-- subject-bound runs and subject-scoped lookup
-- cancellation, checkpoints, and Active Record execution claims
+- triggers and launch routing on operations
+- named workflows within an operation
+- named entrypoints on an operation
+- workflow input and output helpers for common shaping cases
 
-So this document should be read as:
+Strategically, that means Rubot is more than a small workflow helper library. It is a framework for building operational software where agents, approvals, and replay live inside an explicit runtime model.
 
-- partly a description of the system that already exists
-- partly a description of where the API should continue to converge
+The main design direction is:
 
-## Core Nouns
+- small features should stay compact
+- larger features should scale into operations cleanly
+- the framework should reward convention over configuration
 
-### Operation
+## A Practical Decision Tree
 
-An `Operation` is the business and runtime feature boundary for a Rubot feature.
+If you are building a new feature, ask:
 
-An operation may own:
+### Do I only have one execution path?
 
-- tools
-- agents
-- workflows
-- triggers
-- memory configuration
-- middleware
-- UI
-- policies
-- fixtures or examples
+If yes, start with a workflow.
 
-An operation answers:
+### Do I need multiple related execution paths?
 
-- what is this internal tool or workflow feature?
-- how does it start?
-- what logic and reasoning are involved?
+If yes, introduce an operation.
 
-Example mental model:
+### Do the workflows share tools, agents, or triggers?
 
-- `RefundReviewOperation`
-- `CustomerEscalationOperation`
-- `InvoiceIntakeOperation`
+If yes, they probably belong under one operation.
 
-An operation is larger than a workflow. It is the feature boundary.
+### Is this feature becoming package-like?
 
-An operation is **not** the same thing as the full Rails UI surface. In a Rails app, the operation should usually be invoked from normal controllers, routes, and views.
+If yes, definitely use an operation.
 
-Current Rubot state:
+That is especially true for a future library like PDT, where the installable unit is a business capability, not just one workflow class.
 
-- `Rubot::Operation` already exists
-- operations can define workflows, agents, tools, triggers, and memory config
-- operations can launch and enqueue runs
-- subject-aware helpers like `launch_for` and `enqueue_for` already exist
+## Final Guidance
 
-What is still evolving is the outer authoring polish, especially around richer trigger modeling and operation-local UI contracts.
+Do not think of `Operation` as a mandatory wrapper around every workflow.
 
-### Workflow
+Think of it as the point where a runnable workflow becomes a business capability.
 
-A `Workflow` is the orchestration graph inside an operation.
+The usual progression is:
 
-A workflow answers:
+- workflow first
+- operation once the business capability matters
+- multiple workflows inside the operation once the capability gets broader
 
-- what steps happen?
-- in what order?
-- where do humans review?
-- when does execution branch, retry, or resume?
+If a workflow is enough, use a workflow.
 
-A workflow coordinates:
+If the capability needs a name, packaging, multiple paths, shared components, or trigger routing, use an operation.
 
-- steps
-- agent steps
-- tool steps
-- approval steps
-- branching
-- resumptions
-
-Workflows are also where business policy should live. A useful rule of thumb is:
-
-- tools gather facts
-- agents produce structured judgment
-- workflows decide what actually happens
-
-That separation keeps the model advisory rather than authoritative.
-
-An operation may contain one workflow or multiple workflows.
-
-Current Rubot state:
-
-- `Rubot::Workflow` is a real execution primitive today
-- workflows already support ordered steps, tool steps, agent steps, approval steps, and resume behavior
-- workflows now also record checkpoints to make resumed execution safer and more inspectable
-
-### Agent
-
-An `Agent` is a reasoning participant.
-
-An agent answers:
-
-- given this context, what should be concluded, proposed, or requested next?
-
-An agent may have:
-
-- instructions
-- model configuration
-- tool access
-- input schema
-- output schema
-- memory configuration
-- middleware
-
-In the common case, an agent can often be just instructions plus schemas. That is enough for Rubot to call the configured provider and parse structured output without a custom `perform` method.
-
-In the desired state, agent properties can be partly dynamic at runtime, especially:
-
-- instructions
-- model
-- available tools
-
-Current Rubot state:
-
-- dynamic resolution for instructions, model, and tools already exists
-- middleware already wraps agent/provider execution
-- provider-backed agents and plain-Ruby agents are both supported
-- schema-backed agents make it easier to turn model flakiness into ordinary framework errors instead of ad hoc parsing code
-
-### Tool
-
-A `Tool` is an explicit application action.
-
-A tool answers:
-
-- what concrete action can the system take?
-
-Examples:
-
-- look up a record
-- write a note
-- fetch a document
-- create a task
-- send a notification
-
-Tools should remain:
-
-- typed
-- auditable
-- policy-aware
-- safe to expose to agents
-
-Current Rubot state:
-
-- tools already validate input and output
-- tool calls are audited into runs
-- tools can declare idempotency and retry behavior
-- tool execution can be policy-checked
-
-### Run
-
-A `Run` is a concrete execution instance.
-
-A run answers:
-
-- what happened for this specific invocation?
-
-A run tracks:
-
-- input
-- state
-- output
-- current step
-- status
-- events
-- approvals
-- tool calls
-- errors
-
-Runs are durable and inspectable.
-
-Current Rubot state:
-
-- runs already carry trace metadata, replay metadata, subject references, tool calls, approvals, and events
-- runs also track cancellation requests and step checkpoints
-- Active Record persistence is available through `Rubot::Stores::ActiveRecordStore`
-
-### Approval
-
-An `Approval` is a human control point inside execution.
-
-An approval answers:
-
-- who needs to review this?
-- by when?
-- what decision did they make?
-
-Approvals may include:
-
-- role requirement
-- assigned approver
-- SLA due time
-- expiry time
-- approve / reject / request changes decision
-- rationale
-
-### Event
-
-An `Event` is a structured trace record for significant activity.
-
-Events answer:
-
-- what happened?
-- when did it happen?
-- in what step or context?
-
-Events are the backbone of:
-
-- debugging
-- operator UI
-- replay
-- observability
-
-This is especially important for AI-assisted workflows. If someone asks why a request was auto-approved or routed a certain way, events are the framework's built-in flight recorder.
-
-### Memory
-
-`Memory` is the layer that shapes what prior information is available to future reasoning.
-
-Rubot should distinguish between:
-
-- durable history: the full canonical audit trail
-- model context: the curated subset sent into the LLM
-
-This distinction matters because long-running operations need context management without losing trust.
-
-### Middleware
-
-`Middleware` is the execution perimeter around an agent or other runtime boundary.
-
-Middleware answers:
-
-- what checks or transformations happen before and after reasoning?
-
-Typical middleware concerns:
-
-- authorization
-- prompt guardrails
-- redaction
-- logging
-- rate limits
-- tenant scoping
-
-### Trigger
-
-A `Trigger` is a way an operation starts or advances.
-
-Examples:
-
-- manual operator action
-- webhook
-- scheduled job
-- lifecycle event from a subject record
-- internal API call
-
-This is important because webhooks, queues, and cron should be thought of as operation ingress, not disconnected plumbing.
-
-In a Rails app, that often means:
-
-- a controller action triggers an operation
-- a webhook endpoint triggers an operation
-- a job or schedule triggers an operation
-
-The ingress is Rails-native; the unit of work is the operation.
-
-### Subject
-
-A `Subject` is the application record or business entity the operation is attached to.
-
-Examples:
-
-- `Ticket`
-- `Invoice`
-- `Customer`
-- `Dispute`
-
-The subject gives Rubot a natural home in the Rails app.
-
-Current Rubot state:
-
-- subject binding is already first-class in runs
-- `Rubot.run_for(subject, ...)` and `Rubot.enqueue_for(subject, ...)` already exist
-- stores can look up runs by subject
-- subject memory adapters can enrich model context without replacing canonical history
-
-### UI Surface
-
-A `UI Surface` is the operator-facing presentation for an operation.
-
-Examples:
-
-- start form
-- run detail page
-- approval panel
-- trace view
-- subject-side embedded panel
-- admin console workbench
-
-The desired state is that operation-facing UI is associated with the operation model, not treated as an afterthought.
-
-But this should not be read as “the operation owns all Rails rendering.” The better Rails pattern is:
-
-- app controllers and routes compose product-facing UI
-- those app surfaces invoke operations
-- the operation remains the source of truth for execution
-- the Rubot admin UI remains a separate governance surface
-
-So there are two distinct UI concerns:
-
-- operation-facing app UI: start forms, embedded panels, subject pages, domain workflows
-- admin/governance UI: runs, approvals, replay, traces, metrics, cross-operation inspection
-
-Those can live in the same Rails app, but they should remain conceptually distinct.
-
-### Controller
-
-A Rails `Controller` is still the request/response composition layer.
-
-Controllers answer:
-
-- what route is being served?
-- what params or uploads are accepted?
-- what app-facing view should render?
-- which operation should be invoked?
-
-Controllers should remain responsible for:
-
-- request parsing
-- file upload handling
-- auth hooks
-- redirect/render behavior
-- page composition
-
-Controllers should not become the hidden home for agent logic, tool logic, or workflow orchestration. That logic belongs in tools, agents, workflows, and operations.
-
-### Admin Surface
-
-The Rubot admin surface is the governance and inspection UI.
-
-It answers:
-
-- what runs exist across operations?
-- what approvals are waiting?
-- what happened during execution?
-- how do I replay, inspect, and debug a run?
-
-The admin surface is intentionally different from product-facing operation UI.
-
-Good mental split:
-
-- `/ops/...` or other app routes: do the work
-- `/rubot/admin/...`: inspect and govern the work
-
-Current Rubot state:
-
-- the admin surface is currently implemented as a mountable Rails engine
-- the host app owns the outer mount path
-- the engine owns runs, approvals, replay, dashboard, and playground routes inside that mount
-
-## Core Verbs
-
-### Define
-
-Developers define:
-
-- operations
-- workflows
-- agents
-- tools
-- policies
-- UI
-
-This is authoring-time structure.
-
-### Trigger
-
-A trigger starts or advances an operation.
-
-Examples:
-
-- `trigger :manual`
-- `trigger :webhook`
-- `trigger :schedule`
-
-This is how backend concerns like webhooks and cron fit into the model.
-
-Current Rubot state:
-
-- operation triggers already exist in a first-pass form
-- they currently support trigger resolution and operation launch/enqueue helpers
-- the richer trigger surface remains an area for future refinement
-
-### Run
-
-To `run` is to execute a workflow or agent synchronously or asynchronously.
-
-Examples in current Rubot terms:
-
-- `Rubot.run(...)`
-- `Rubot.enqueue(...)`
-- `Rubot.run_for(subject, ...)`
-- `Rubot.enqueue_for(subject, ...)`
-
-Desired-state meaning:
-
-- start an operation execution
-- create a durable run
-- begin orchestration
-
-### Reason
-
-To `reason` is for an agent to produce a model-backed response.
-
-This may involve:
-
-- assembling model context
-- applying memory processors
-- invoking middleware
-- calling the provider
-- validating output
-
-### Call
-
-To `call` is for an agent or workflow to invoke a tool.
-
-Tool calls should be:
-
-- explicit
-- validated
-- logged
-- replayable
-
-### Approve
-
-To `approve` is to let execution continue through a human checkpoint.
-
-Related verbs:
-
-- reject
-- request changes
-- expire
-- escalate
-
-### Resume
-
-To `resume` is to continue a paused run after:
-
-- approval
-- delayed scheduling
-- retry
-- operator intervention
-
-### Inspect
-
-To `inspect` is to view the run, trace, tool calls, approvals, and outputs.
-
-This is a first-class operator and developer activity, not just a debugging convenience.
-
-### Replay
-
-To `replay` is to reconstruct or re-run prior execution for diagnosis, testing, or auditing.
-
-### Evaluate
-
-To `evaluate` is to score behavior against fixtures, expectations, or regression checks.
-
-### Notify
-
-To `notify` is to emit outward communication about operation state.
-
-Examples:
-
-- approval requested
-- workflow failed
-- SLA breached
-- action completed
-
-## Relationships Between Nouns
-
-The intended hierarchy is:
-
-- an operation contains workflows, agents, tools, triggers, UI, memory config, and middleware
-- a workflow orchestrates agents, tools, and approvals
-- a run is one execution of an agent or workflow within an operation
-- events, approvals, and tool calls belong to a run
-- a subject anchors a run in application data
-
-That gives Rubot this conceptual stack:
-
-- `Tool`: explicit action
-- `Agent`: reasoning
-- `Workflow`: orchestration
-- `Operation`: product boundary
-
-## Backend Concerns in the Model
-
-Typical backend functionality should be understood as operation infrastructure.
-
-### Webhooks
-
-Webhooks are triggers.
-
-They should map inbound external events into:
-
-- operation selection
-- subject lookup
-- input normalization
-- workflow start
-
-### Queues and Jobs
-
-Queues are execution mechanics.
-
-They should support:
-
-- async run start
-- step execution
-- delayed resume
-- retry
-- SLA checks
-
-Rubot should use Rails and Active Job for this, but the intent belongs to the operation.
-
-### Scheduled Work
-
-Cron-like execution is another trigger type.
-
-Examples:
-
-- stale approval sweeps
-- nightly enrichment
-- recurring review operations
-
-### Controllers and APIs
-
-Controllers and APIs are entrypoints into operations.
-
-They should not replace the operation model. They should delegate into it.
-
-Current Rubot state:
-
-- this is already the intended pattern in the sample app
-- the sample app owns `/` and `/ops/...`
-- the Rubot engine is mounted under `/rubot/admin`
-
-### Notifications
-
-Notifications are operation side effects.
-
-They should be driven by run state, approval state, and policy rules.
-
-## Memory: Desired-State Model
-
-Memory should not mean “dump the whole past conversation into the model.”
-
-Rubot should preserve:
-
-- full durable run history for trust and replay
-- shaped model context for efficient reasoning
-
-This implies a processor pipeline over model context.
-
-Important desired-state processors:
-
-### TokenLimiter
-
-Removes older context until the prompt fits under a configured token budget.
-
-Purpose:
-
-- avoid hard model failures
-- keep long-running operations viable
-
-### ToolCallFilter
-
-Removes verbose past tool-call chatter from model context when it is not needed.
-
-Purpose:
-
-- save tokens
-- keep prompts focused
-
-These processors should never mutate canonical stored history.
-
-Current Rubot state:
-
-- `TokenLimiter` and `ToolCallFilter` already exist
-- subject-scoped memory retrieval also exists through a separate subject memory adapter
-
-## Dynamic Agents: Desired-State Model
-
-Agents should support runtime-resolved properties.
-
-This matters for:
-
-- tenant-aware behavior
-- user-role-aware tool exposure
-- plan-tier limits
-- subject-specific instructions
-
-Likely dynamic fields:
-
-- instructions
-- model
-- tools
-- possibly output schema
-
-The important constraint is that dynamic behavior should still remain inspectable and policy-governed.
-
-Current Rubot state:
-
-- this is already implemented for instructions, model, and tools
-- resolved configuration is emitted into run events for inspection
-
-## Middleware: Desired-State Model
-
-Middleware should be the perimeter around agent execution.
-
-That means Rubot should have a stable place to plug in:
-
-- authz
-- guardrails
-- redaction
-- logging
-- quotas
-- tracing
-
-Middleware should happen before broad external tool expansion, not after.
-
-Current Rubot state:
-
-- middleware support already exists around agent execution
-- policy adapters also exist as a separate authorization layer for runtime and admin checks
-
-## MCP: Desired-State Model
-
-Rubot should support MCP as an external tool ecosystem, but MCP should enter through Rubot's tool model.
-
-That means:
-
-- discover remote tools
-- normalize them into Rubot-compatible tool surfaces
-- run them through middleware, policies, approvals, and tracing
-
-MCP should expand integration speed without bypassing Rubot governance.
-
-Current Rubot state:
-
-- MCP-backed tool integration already exists in a first pass
-- remote tools are normalized into Rubot tool surfaces rather than bypassing them
-
-## UI: Desired-State Model
-
-UI should be thought of in two layers.
-
-### Operation-Level UI
-
-This is the immediate operator surface for a specific feature:
-
-- start form
-- approval panel
-- run page
-- result view
-
-This should be closely coupled to the operation definition.
-
-Current Rubot state:
-
-- the repo currently uses a host-app composition model rather than a full operation-owned UI DSL
-- that means Rails controllers and views remain the product-facing UI layer
-- the operation remains the execution boundary underneath
-
-### Platform-Level UI
-
-This is the admin/operator framework around all operations:
-
-- operator console
-- trace viewer
-- metrics views
-- workbench layouts
-- reusable internal-tool components
-
-This should evolve after the runtime and operator behaviors are real enough to design against.
-
-Current Rubot state:
-
-- the platform-level admin UI already exists as the engine surface
-- it includes dashboard, runs, approvals, replay, trace-oriented views, and playground support
-
-## Small-App DX vs Large-App DX
-
-Rubot should support both of these without changing concepts.
-
-### Small-App Happy Path
-
-For a small internal workflow, a developer should be able to define everything near each other:
-
-- operation
-- tools
-- agents
-- workflow
-- UI
-
-This may be one file or one small directory.
-
-Current Rubot state:
-
-- the framework supports this in a basic way through `Rubot::Operation`
-- the preferred visible Rails pattern in the repo is still a small directory of `app/operations`, `app/tools`, `app/agents`, and `app/workflows`
-
-### Large-App Decomposition
-
-For more complex systems, the same operation should be able to split into:
-
-- `app/operations`
-- `app/tools`
-- `app/agents`
-- `app/workflows`
-- `app/views` or frontend components
-
-The runtime model should not change when code organization changes.
-
-## Desired-State API Shape
-
-The exact syntax may evolve, but the desired shape should feel like this:
-
-```ruby
-class RefundReviewOperation < Rubot::Operation
-  trigger :manual
-  trigger :webhook, path: "/webhooks/refunds"
-  trigger :schedule, cron: "0 * * * *"
-
-  memory do
-    processor Rubot::Memory::Processors::TokenLimiter, max_tokens: 12_000
-    processor Rubot::Memory::Processors::ToolCallFilter
-  end
-
-  middleware do
-    use Rubot::Middleware::Authorization
-    use Rubot::Middleware::PromptGuard
-  end
-
-  tool :lookup_charge do
-    # ...
-  end
-
-  agent :review do
-    instructions ->(ctx) { "Review the case for #{ctx[:tenant_name]}" }
-    model ->(ctx) { ctx[:premium?] ? "gpt-5" : "gpt-5-mini" }
-    tools ->(ctx) { ctx[:allowed_tools] }
-  end
-
-  workflow do
-    # ...
-  end
-
-  ui do
-    # ...
-  end
-end
-```
-
-This example is aspirational. The important part is the shape:
-
-- the operation is the feature
-- the workflow is the execution graph
-- the agent reasons
-- the tool acts
-- triggers, middleware, memory, and UI belong to the same boundary
-
-## What Exists Today vs Desired State
-
-Today, Rubot already has strong foundations in:
-
-- tools
-- agents
-- workflows
-- operations
-- runs
-- approvals
-- events
-- provider abstraction
-- job-backed execution
-- replay
-- evals
-- subject-bound execution
-- subject memory adapters
-- memory processors
-- dynamic agents
-- middleware
-- policy adapters
-- admin engine
-- MCP integration
-- cancellation and checkpointing
-
-The desired-state gaps are mostly in:
-
-- polishing `Operation` into a clearer first-class authoring primitive
-- richer trigger modeling
-- operation-local UI
-- deeper admin packaging and customization
-- documentation and generator alignment around the current architecture
-
-That is a good position to be in. The current implementation is not fighting the desired model. Most of the work now is about cleanup, consistency, and making the existing capabilities feel more intentional.
-
-## Summary
-
-Rubot should be understood as a framework where:
-
-- operations package internal-tool features
-- workflows orchestrate execution
-- agents reason
-- tools act
-- runs record what happened
-- memory shapes model context
-- middleware governs the perimeter
-- triggers connect backend infrastructure to business intent
-- UI makes the system operable by humans
-
-That is the desired-state vocabulary the API should converge toward.
+If you want the repo-level orientation for how the Ruby runtime and Rails engine fit together, read [Architecture](./architecture.md) after this guide.

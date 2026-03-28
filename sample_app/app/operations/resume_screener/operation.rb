@@ -52,6 +52,7 @@ module ResumeScreener
     tool :load_job_description, ResumeScreener::LoadJobDescriptionTool
     tool :prepare_resume, ResumeScreener::PrepareResumeTool
     agent ResumeScreener::ScreeningAgent
-    workflow ResumeScreener::Workflow
+    workflow :screening, ResumeScreener::Workflow, default: true
+    entrypoint :screen_resume, workflow: :screening
   end
 end

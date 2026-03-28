@@ -11,6 +11,19 @@ module Rubot
       def run(input:, run:, context: {})
         new.run(input:, run:, context:)
       end
+
+      def rubot_operation_owner
+        @rubot_operation_owner
+      end
+
+      def resolve_operation_tool(tool)
+        return tool unless tool.is_a?(Symbol)
+
+        owner = rubot_operation_owner
+        return tool unless owner&.respond_to?(:tool)
+
+        owner.tool(tool) || raise(ExecutionError, "#{name} could not resolve tool #{tool} from #{owner.name}")
+      end
     end
 
     def run(input:, run:, context: {})
@@ -124,6 +137,11 @@ module Rubot
         )
         return normalize_provider_output(provider_result)
       end
+    end
+
+    def discover_tools(input: {}, context: {}, run: nil)
+      resolution_context = AgentResolutionContext.new(agent: self, run: run, input: input, context: context)
+      resolve_tools(resolution_context).map(&:discover)
     end
 
     private
@@ -295,7 +313,17 @@ module Rubot
           self.class.rubot_tools
         end
 
-      Array(value)
+      resolved = Array(value).map { |tool| self.class.resolve_operation_tool(tool) }
+
+      if resolution_context.context[:allowed_tool_tags]
+        allowed_tags = Array(resolution_context.context[:allowed_tool_tags]).map(&:to_s)
+        resolved = resolved.select do |tool_class|
+          tool_tags = Array(tool_class.tags).map(&:to_s)
+          (tool_tags & allowed_tags).any?
+        end
+      end
+
+      resolved
     end
 
     def resolve_runtime_value(value, resolution_context)

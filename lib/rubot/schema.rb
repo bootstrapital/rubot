@@ -2,7 +2,7 @@
 
 module Rubot
   class Schema
-    Field = Struct.new(:name, :type, :required, :item_type, keyword_init: true)
+    Field = Struct.new(:name, :type, :required, :item_type, :schema, keyword_init: true)
 
     class Builder
       TYPE_NAMES = {
@@ -34,12 +34,14 @@ module Rubot
         field(name, :boolean, required:)
       end
 
-      def hash(name, required: true)
-        field(name, :hash, required:)
+      def hash(name, required: true, &block)
+        schema = block ? Schema.build(&block) : nil
+        field(name, :hash, required:, schema:)
       end
 
-      def array(name, of:, required: true)
-        field(name, :array, required:, item_type: of)
+      def array(name, of: nil, required: true, &block)
+        schema = block ? Schema.build(&block) : nil
+        field(name, :array, required:, item_type: of, schema:)
       end
 
       def to_schema
@@ -48,8 +50,8 @@ module Rubot
 
       private
 
-      def field(name, type, required:, item_type: nil)
-        @fields << Field.new(name:, type:, required:, item_type:)
+      def field(name, type, required:, item_type: nil, schema: nil)
+        @fields << Field.new(name:, type:, required:, item_type:, schema:)
       end
     end
 
@@ -68,9 +70,26 @@ module Rubot
 
       fields = properties.map do |name, field_schema|
         field_schema = field_schema || {}
-        type = json_schema_type(field_schema[:type] || field_schema["type"])
-        item_type = json_schema_type((field_schema[:items] || field_schema["items"] || {})[:type] || (field_schema[:items] || field_schema["items"] || {})["type"])
-        Field.new(name: name.to_sym, type: type, required: required.include?(name.to_sym), item_type: item_type)
+        raw_type = field_schema[:type] || field_schema["type"]
+        type = json_schema_type(raw_type)
+        
+        items_node = field_schema[:items] || field_schema["items"] || {}
+        item_type = json_schema_type(items_node[:type] || items_node["type"])
+        
+        nested_schema =
+          if type == :hash
+            from_json_schema(field_schema)
+          elsif type == :array && item_type == :hash
+            from_json_schema(items_node)
+          end
+
+        Field.new(
+          name: name.to_sym,
+          type: type,
+          required: required.include?(name.to_sym),
+          item_type: item_type,
+          schema: nested_schema
+        )
       end
 
       new(fields)
@@ -80,17 +99,19 @@ module Rubot
       @fields = fields
     end
 
-    def validate!(payload)
+    def validate!(payload, path = nil)
       payload = Rubot::HashUtils.symbolize(payload || {})
 
       fields.each do |field|
+        field_path = path ? "#{path}.#{field.name}" : field.name.to_s
         value = payload[field.name]
+
         if value.nil?
-          raise ValidationError, "Missing required field #{field.name}" if field.required
+          raise ValidationError, "Missing required field #{field_path}" if field.required
           next
         end
 
-        validate_type!(field, value)
+        validate_field!(field, value, field_path)
       end
 
       payload
@@ -102,8 +123,9 @@ module Rubot
           name: field.name,
           type: field.type,
           required: field.required,
-          item_type: field.item_type
-        }
+          item_type: field.item_type,
+          schema: field.schema&.to_h
+        }.compact
       end
     end
 
@@ -131,39 +153,49 @@ module Rubot
       else :string
       end
     end
-    def validate_type!(field, value)
-      if field.type == :array
-        raise ValidationError, "#{field.name} must be an Array" unless value.is_a?(Array)
-        validate_array_items!(field, value)
-        return
-      end
 
+    def validate_field!(field, value, path)
       expected = Builder::TYPE_NAMES.fetch(field.type)
-      return if expected.is_a?(Array) ? expected.any? { |type| value.is_a?(type) } : value.is_a?(expected)
+      valid_type = expected.is_a?(Array) ? expected.any? { |t| value.is_a?(t) } : value.is_a?(expected)
+      
+      raise ValidationError, "#{path} must be a #{field.type}" unless valid_type
 
-      raise ValidationError, "#{field.name} must be a #{field.type}"
+      if field.type == :hash && field.schema
+        field.schema.validate!(value, path)
+      elsif field.type == :array
+        validate_array_items!(field, value, path)
+      end
     end
 
-    def validate_array_items!(field, value)
-      expected = Builder::TYPE_NAMES[field.item_type]
-      return unless expected
+    def validate_array_items!(field, value, path)
+      if field.schema
+        value.each_with_index do |item, index|
+          field.schema.validate!(item, "#{path}.#{index}")
+        end
+      elsif field.item_type
+        expected = Builder::TYPE_NAMES[field.item_type]
+        return unless expected
 
-      invalid = value.find do |item|
-        expected.is_a?(Array) ? expected.none? { |type| item.is_a?(type) } : !item.is_a?(expected)
+        value.each_with_index do |item, index|
+          valid_item = expected.is_a?(Array) ? expected.any? { |t| item.is_a?(t) } : item.is_a?(expected)
+          raise ValidationError, "#{path}.#{index} items must be #{field.item_type}" unless valid_item
+        end
       end
-
-      return if invalid.nil?
-
-      raise ValidationError, "#{field.name} items must be #{field.item_type}"
     end
 
     def json_schema_for(field)
       case field.type
       when :array
         schema = { type: "array" }
-        item_type = Builder::TYPE_NAMES[field.item_type]
-        schema[:items] = item_type ? { type: json_type_name(field.item_type) } : {}
+        if field.schema
+          schema[:items] = field.schema.to_json_schema
+        else
+          item_type = Builder::TYPE_NAMES[field.item_type]
+          schema[:items] = item_type ? { type: json_type_name(field.item_type) } : {}
+        end
         schema
+      when :hash
+        field.schema ? field.schema.to_json_schema : { type: "object" }
       else
         { type: json_type_name(field.type) }
       end

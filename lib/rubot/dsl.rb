@@ -2,6 +2,8 @@
 
 module Rubot
   module DSL
+    UNSET = Object.new
+
     def inherited(subclass)
       super
       subclass.instance_variable_set(:@rubot_tools, rubot_tools.dup)
@@ -16,18 +18,32 @@ module Rubot
       subclass.instance_variable_set(:@rubot_memory_config, (@rubot_memory_config&.dup || Rubot::Memory::Config.new))
       subclass.instance_variable_set(:@rubot_provider_adapter, @rubot_provider_adapter)
       subclass.instance_variable_set(:@rubot_model_name, @rubot_model_name)
+      subclass.instance_variable_set(:@rubot_tags, @rubot_tags&.dup)
+      subclass.instance_variable_set(:@rubot_metadata, @rubot_metadata&.dup)
+      subclass.instance_variable_set(:@rubot_config_file_path, @rubot_config_file_path)
       subclass.instance_variable_set(:@rubot_middlewares, rubot_middlewares.dup)
       subclass.instance_variable_set(:@rubot_playground_fixtures, rubot_playground_fixtures.dup)
     end
 
-    def instructions(value = nil, &block)
-      return @rubot_instructions if value.nil? && !block
-
-      @rubot_instructions = value || block
+    def discover
+      {
+        name: name,
+        description: description,
+        input_schema: input_schema.to_json_schema,
+        output_schema: output_schema.to_json_schema,
+        tags: tags,
+        metadata: metadata
+      }.compact
     end
 
-    def description(text = nil)
-      return @rubot_description if text.nil?
+    def instructions(value = UNSET, &block)
+      return resolved_agent_config_value(:instructions, @rubot_instructions) if value.equal?(UNSET) && !block
+
+      @rubot_instructions = block || value
+    end
+
+    def description(text = UNSET)
+      return resolved_agent_config_value(:description, @rubot_description) if text.equal?(UNSET)
 
       @rubot_description = text
     end
@@ -90,10 +106,30 @@ module Rubot
       @rubot_provider_adapter = adapter
     end
 
-    def model(name = nil)
-      return @rubot_model_name if name.nil?
+    def model(name = UNSET)
+      return resolved_agent_config_value(:model, @rubot_model_name) if name.equal?(UNSET)
 
       @rubot_model_name = name
+    end
+
+    def tags(*values)
+      return resolved_agent_config_value(:tags, @rubot_tags) if values.empty?
+
+      @rubot_tags = values.flatten.map(&:to_s).freeze
+    end
+
+    def metadata(values = UNSET)
+      return resolved_agent_config_value(:metadata, @rubot_metadata) if values.equal?(UNSET)
+
+      raise Rubot::ValidationError, "Rubot metadata must be a mapping" unless values.is_a?(Hash)
+
+      @rubot_metadata = Rubot::HashUtils.symbolize(values).freeze
+    end
+
+    def config_file(path = UNSET)
+      return @rubot_config_file_path if path.equal?(UNSET)
+
+      @rubot_config_file_path = path
     end
 
     def use(middleware_class, **options)
@@ -142,6 +178,39 @@ module Rubot
 
     def rubot_playground_fixtures
       @rubot_playground_fixtures ||= []
+    end
+
+    def resolved_config_file
+      explicit = @rubot_config_file_path
+      return expand_config_file_path(explicit) if explicit
+
+      inferred = inferred_config_file_path
+      inferred if inferred && File.exist?(inferred)
+    end
+
+    def agent_config
+      Rubot::AgentConfigFile.load(path: resolved_config_file)
+    end
+
+    private
+
+    def resolved_agent_config_value(key, explicit_value)
+      return explicit_value unless explicit_value.nil?
+
+      agent_config[key]
+    end
+
+    def inferred_config_file_path
+      source_path = const_source_location(name)&.first
+      return unless source_path
+
+      File.join(File.dirname(source_path), "#{File.basename(source_path, '.rb')}.yml")
+    end
+
+    def expand_config_file_path(path)
+      source_path = const_source_location(name)&.first
+      base_dir = source_path ? File.dirname(source_path) : Dir.pwd
+      File.expand_path(path.to_s, base_dir)
     end
   end
 end

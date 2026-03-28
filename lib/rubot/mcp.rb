@@ -86,5 +86,78 @@ module Rubot
         "#{segments.map { |segment| segment[0].upcase + segment[1..] }.join}Tool"
       end
     end
+
+    class Server
+      def initialize(operations: [])
+        @operations = operations
+      end
+
+      def list_tools
+        @operations.map do |op|
+          {
+            name: op.name.to_s.gsub("::", "__"),
+            description: op.description || "Rubot Operation: #{op.name}",
+            inputSchema: op.input_schema.to_json_schema
+          }
+        end
+      end
+
+      def call_tool(name, arguments = {})
+        op_name = name.gsub("__", "::")
+        op = @operations.find { |o| o.name == op_name }
+        
+        raise "Operation not found: #{name}" unless op
+
+        run = op.launch(payload: arguments)
+
+        if run.completed?
+          {
+            content: [{ type: "text", text: JSON.generate(run.output) }],
+            isError: false
+          }
+        elsif run.failed?
+          {
+            content: [{ type: "text", text: "Run failed: #{JSON.generate(run.error)}" }],
+            isError: true
+          }
+        else
+          {
+            content: [{ type: "text", text: "Run status: #{run.status}. ID: #{run.id}" }],
+            isError: false
+          }
+        end
+      end
+    end
+
+    class StandardIOServer < Server
+      def run
+        while (line = STDIN.gets)
+          request = JSON.parse(line) rescue next
+          response = handle_request(request)
+          STDOUT.puts(JSON.generate(response))
+          STDOUT.flush
+        end
+      end
+
+      private
+
+      def handle_request(request)
+        id = request["id"]
+        method = request["method"]
+        params = request["params"] || {}
+
+        result =
+          case method
+          when "tools/list"
+            { tools: list_tools }
+          when "tools/call"
+            call_tool(params["name"], params["arguments"] || {})
+          else
+            { error: { code: -32601, message: "Method not found" } }
+          end
+
+        { jsonrpc: "2.0", id: id, result: result }
+      end
+    end
   end
 end

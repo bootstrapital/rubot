@@ -1,8 +1,8 @@
 # Rubot Admin Mounting and Customization
 
-This guide documents the intended Rails integration story for the Rubot admin engine.
+This guide documents the Rails integration story for the Rubot admin engine.
 
-The admin engine is currently a `provisional` API surface. See [`public_api.md`](./public_api.md) for the current contract boundary.
+The admin engine is currently a `provisional` API surface. See [`public_api.md`](./public_api.md) for its current contract status.
 
 ## What the Admin Engine Owns
 
@@ -132,7 +132,7 @@ Useful admin-facing data contracts:
 - `Rubot::Presenters::ApprovalPresenter#as_admin_json`
 - `Rubot::Presenters::ToolCallPresenter#as_admin_json`
 
-These presenter contracts are useful for frontend-driven extensions, but remain `provisional` during `v0.2`.
+These presenter contracts are useful for frontend-driven extensions, but remain `provisional` while the admin API surface undergoes final refinement.
 
 ## What Rubot Owns
 

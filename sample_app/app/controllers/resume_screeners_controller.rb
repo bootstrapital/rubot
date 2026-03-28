@@ -21,7 +21,7 @@ class ResumeScreenersController < ApplicationController
       return render :show, status: :unprocessable_entity
     end
 
-    @run = ResumeScreener::Operation.launch(
+    @run = ResumeScreener::Operation.launch_screen_resume(
       payload: {
         job_id: @selected_job_id,
         candidate_name: @candidate_name,

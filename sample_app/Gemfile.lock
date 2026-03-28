@@ -3,6 +3,7 @@ PATH
   specs:
     rubot (0.1.0)
       activesupport
+      faraday (>= 2.14)
       globalid
       json
 

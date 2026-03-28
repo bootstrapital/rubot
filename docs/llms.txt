@@ -13,7 +13,7 @@ Rubot is a Rails-native framework for building agentic internal software with:
 - typed tools
 - reasoning agents
 - durable workflows
-- operation-level feature boundaries
+- operation-level business capabilities
 - approvals and human oversight
 - persistent runs, events, and tool calls
 - admin inspection, replay, and evals
@@ -30,12 +30,12 @@ Think in four layers:
 - Tool: explicit application action
 - Agent: reasoning participant
 - Workflow: execution graph and step orchestration
-- Operation: business feature boundary
+- Operation: business capability that packages one or more workflows
 
 The most important distinction:
 
-- Operation is the product/runtime feature boundary
-- Workflow is the orchestration graph inside an operation
+- Workflow is the procedure
+- Operation is the business capability that packages one or more workflows
 
 Do not collapse those concepts together.
 
@@ -78,7 +78,7 @@ Desired Authoring Style
 
 For small features:
 
-- one operation may be the feature boundary
+- one operation may be the business capability
 - it may compose one workflow, one agent, and a few tools
 - the surrounding Rails controller/view should stay thin
 
@@ -87,6 +87,14 @@ For larger features:
 - split tools, agents, workflows, and operations into separate files
 - keep shared tools/agents reusable across operations
 - keep operations focused on business intent, not generic plumbing
+
+Current operation authoring supports both:
+
+- inline workflows inside an operation for compact capabilities
+- separate workflow classes for larger or reused procedures
+
+Prefer inline definitions when the capability is small and tightly scoped.
+Prefer separate files when the workflow is longer, reused, or one operation owns multiple procedures.
 
 When writing examples, show the visible Rails extension story. Prefer files in app directories over
 hiding everything in initializers.
@@ -150,8 +158,8 @@ Prefer `Rubot::Workflow` when:
 Prefer `Rubot::Operation` when:
 
 - you are defining a user-facing or operator-facing business feature
-- one feature bundles a workflow, agents, tools, triggers, memory config, and policies
-- you want a stable top-level feature boundary in the app
+- one feature bundles workflows, agents, tools, triggers, memory config, and policies
+- you want a stable top-level business capability in the app
 
 
 Current vs Desired State
@@ -178,9 +186,12 @@ Rubot already has real runtime support for:
 - dynamic agent resolution
 - middleware
 - policy adapters
+- named workflows inside operations
+- inline or separate-file operation workflows
 - cancellation and execution checkpoints
 - Active Record execution claims / concurrency protection
 - MCP-backed tool integration
+- Faraday-backed HTTP helpers for tools
 
 Rubot's desired long-term shape also includes:
 
@@ -206,6 +217,8 @@ When describing what a developer can do today, prefer these concrete APIs:
 - `Operation.launch_for(subject, ...)`
 - `Operation.enqueue(...)`
 - `Operation.enqueue_for(subject, ...)`
+- `Rubot::HTTP.get(...)`
+- `Rubot::HTTP.post(...)`
 
 For subject-aware features:
 
@@ -216,6 +229,12 @@ For persistence in Rails:
 
 - prefer `Rubot::Stores::ActiveRecordStore`
 - treat `MemoryStore` as a dev/test/demo convenience
+
+For API-backed tools:
+
+- prefer `Rubot::HTTP` over ad hoc HTTP client setup in each tool
+- keep auth/header construction explicit in the tool or a small local helper
+- let `Rubot::HTTP` own request execution, parsing, and normalized failures
 
 
 Admin vs Product UI
@@ -415,6 +434,15 @@ For a small app feature:
 
 is a good starting point.
 
+For a larger capability:
+
+- one operation
+- two or more named workflows
+- shared tools and agents
+- triggers or explicit launch paths that choose the right procedure
+
+That is where `Operation` starts to earn its keep.
+
 Do not start with a giant monolithic agent that does everything in a prompt.
 Break concrete actions out into tools.
 
@@ -457,6 +485,7 @@ Prefer:
 - thin controllers
 - durable workflow state
 - operation-level feature grouping
+- business-capability grouping through operations
 - small, composable classes
 - real app directories over initializer-only definitions
 - host-app routes for product UI and engine routes for admin
@@ -485,6 +514,20 @@ When explaining Rubot, emphasize:
 5. Approvals, replay, evals, and governance
 
 When showing examples, favor business features over toy chatbots.
+
+
+Testing and Setup
+-----------------
+
+Use the normal project test path:
+
+- `bundle exec rake test`
+
+Direct file runs like `bundle exec ruby -Ilib -Itest test/operation_test.rb` are fine for focused work,
+but the default expectation should be that the full suite runs through Bundler and Rake.
+
+If you add framework tests that depend on Rails components such as Active Job, Action Pack, or Active Record,
+assume those are part of the repo's standard development/test environment rather than something callers should preload manually.
 
 
 Testing Priorities

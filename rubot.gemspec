@@ -29,7 +29,13 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.add_dependency "json"
   spec.add_dependency "activesupport"
+  spec.add_dependency "faraday", ">= 2.14"
   spec.add_dependency "globalid"
+  spec.add_development_dependency "actionpack"
+  spec.add_development_dependency "activejob"
+  spec.add_development_dependency "activerecord"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "simplecov"
+  spec.add_development_dependency "sqlite3"
+  spec.add_development_dependency "railties"
 end

@@ -4,18 +4,11 @@ module ResumeScreener
   class Workflow < Rubot::Workflow
     tool_step :load_job,
               tool: ResumeScreener::LoadJobDescriptionTool,
-              input: ->(input, _state, _context) { { job_id: input[:job_id] } }
+              input: from_input(:job_id)
 
     tool_step :prepare_resume,
               tool: ResumeScreener::PrepareResumeTool,
-              input: lambda { |input, _state, _context|
-                {
-                  candidate_name: input[:candidate_name],
-                  resume_text: input[:resume_text],
-                  file_name: input[:file_name],
-                  content_type: input[:content_type]
-                }
-              }
+              input: from_input(:candidate_name, :resume_text, :file_name, :content_type)
 
     agent_step :screen_resume,
                agent: ResumeScreener::ScreeningAgent,
@@ -38,14 +31,6 @@ module ResumeScreener
                },
                save_as: :screening
 
-    step :finalize
-
-    def finalize
-      run.state[:finalize] = {
-        job: run.state.fetch(:load_job),
-        resume: run.state.fetch(:prepare_resume),
-        screening: run.state.fetch(:screening)
-      }
-    end
+    output :load_job, :prepare_resume, :screening
   end
 end

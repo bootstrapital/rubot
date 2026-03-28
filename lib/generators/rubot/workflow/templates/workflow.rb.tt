@@ -1,8 +1,24 @@
 class <%= class_name %>Workflow < Rubot::Workflow
+  # Define the sequence of steps
   step :load_context
+  
+  # Agent steps can use symbols from the operation owner
+  # agent_step :analyze, agent: :my_agent, input: from_state(:load_context)
+  
+  # Approval steps pause execution until a human decides
   approval_step :review_recommendation, role: "ops"
+  
+  # Compute steps are for simple data transformation
+  compute :prepare_result do |input, state, context|
+    state[:result] = {
+      outcome: "processed",
+      processed_at: Time.now
+    }
+  end
+
   step :finalize
 
+  # Define step implementation methods
   def load_context
     run.state[:brief] = {
       summary: "Review #{run.input[:subject_id]}"
@@ -10,10 +26,13 @@ class <%= class_name %>Workflow < Rubot::Workflow
   end
 
   def finalize
-    run.state[:result] = {
-      outcome: "approved",
+    run.state[:final_outcome] = {
+      status: "completed",
       approved_by: run.approvals.last&.decision_payload&.fetch(:approved_by, nil),
-      brief: run.state.fetch(:brief)
+      data: run.state.fetch(:result, {})
     }
   end
+
+  # Define what is returned at the end of the run
+  output :final_outcome
 end

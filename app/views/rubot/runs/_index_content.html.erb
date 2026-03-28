@@ -1,13 +1,14 @@
 <div id="<%= Rubot::LiveUpdates.runs_table_dom_id %>">
-  <%= render "rubot/shared/data_table",
-             rows: runs,
-             columns: [
-               { label: "Run", value: ->(run) { link_to run.name, rubot.run_path(run.id), class: "rubot-link" } },
-               { label: "Status", value: ->(run) { rubot_status_badge(run.run.status) } },
-               { label: "Step", key: :current_step },
-               { label: "Started", key: :started_at },
-               { label: "Duration", key: :duration }
-             ],
-             empty_title: "No runs yet",
-             empty_body: "Start a workflow or agent run and it will show up here with realtime status updates." %>
+  <%= rubot_data_table(
+        rows: runs,
+        columns: [
+          { label: "Run", value: ->(run) { link_to run.name, rubot.run_path(run.id), class: "rubot-link" } },
+          { label: "Status", value: ->(run) { rubot_status_badge(run.run.status) } },
+          { label: "Step", key: :current_step },
+          { label: "Started", key: :started_at },
+          { label: "Duration", key: :duration }
+        ],
+        empty_title: "No runs yet",
+        empty_body: "Start a workflow or agent run and it will show up here with realtime status updates."
+      ) %>
 </div>

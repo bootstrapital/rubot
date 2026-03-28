@@ -18,6 +18,10 @@ module Rubot
         template "initializer.rb.tt", "config/initializers/rubot.rb"
       end
 
+      def create_config
+        template "rubot.yml.tt", "config/rubot.yml"
+      end
+
       def copy_migration
         migration_template "create_rubot_tables.rb.tt", "db/migrate/create_rubot_tables.rb"
       end

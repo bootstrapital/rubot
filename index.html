@@ -1,698 +1,343 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Rubot</title>
-        <meta
-            name="description"
-            content="Rubot is a Rails-native framework for building agentic internal tools with durable workflow state, approvals, and operator oversight."
-        />
-        <style>
-            :root {
-                --bg: #f7f3ec;
-                --panel: #fffdf8;
-                --ink: #17130f;
-                --muted: #5f554a;
-                --line: #d8ccbc;
-                --accent: #7f341d;
-                --max: 760px;
-            }
-
-            * {
-                box-sizing: border-box;
-            }
-
-            body {
-                margin: 0;
-                background: var(--bg);
-                color: var(--ink);
-                font-family: Georgia, "Times New Roman", serif;
-            }
-
-            a {
-                color: var(--accent);
-            }
-
-            a:hover,
-            a:focus-visible {
-                color: #572212;
-            }
-
-            .page {
-                width: min(calc(100% - 2rem), var(--max));
-                margin: 0 auto;
-                padding: 3rem 0 4rem;
-            }
-
-            header {
-                margin-bottom: 2.5rem;
-            }
-
-            .eyebrow {
-                margin: 0 0 0.5rem;
-                color: var(--muted);
-                font-family: "Helvetica Neue", Arial, sans-serif;
-                font-size: 0.78rem;
-                letter-spacing: 0.12em;
-                text-transform: uppercase;
-            }
-
-            h1,
-            h2 {
-                margin: 0;
-                font-weight: 600;
-                line-height: 1.05;
-                letter-spacing: -0.03em;
-            }
-
-            h1 {
-                font-size: clamp(2.7rem, 8vw, 4.8rem);
-                max-width: 10ch;
-            }
-
-            h2 {
-                font-size: clamp(1.7rem, 4vw, 2.4rem);
-                margin-bottom: 0.9rem;
-            }
-
-            p,
-            li {
-                color: var(--muted);
-                font-size: 1.08rem;
-                line-height: 1.75;
-            }
-
-            .intro {
-                margin-bottom: 3rem;
-            }
-
-            .card {
-                padding: 1.5rem;
-                margin: 0 0 1.25rem;
-                border: 1px solid var(--line);
-                background: var(--panel);
-            }
-
-            .lead {
-                font-size: 1.22rem;
-                color: var(--ink);
-            }
-
-            .links {
-                display: grid;
-                gap: 0.75rem;
-                margin-top: 1rem;
-            }
-
-            .link-row {
-                display: block;
-                padding: 0.95rem 1rem;
-                border: 1px solid var(--line);
-                background: var(--panel);
-                text-decoration: none;
-            }
-
-            .link-row strong {
-                display: block;
-                color: var(--ink);
-                font-size: 1.02rem;
-            }
-
-            .link-row span {
-                display: block;
-                margin-top: 0.25rem;
-                color: var(--muted);
-                font-size: 0.98rem;
-                line-height: 1.55;
-            }
-
-            ul {
-                margin: 0.75rem 0 0;
-                padding-left: 1.2rem;
-            }
-
-            code {
-                font-family:
-                    "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
-                    monospace;
-                font-size: 0.95em;
-            }
-
-            pre {
-                margin: 0.75rem 0 0;
-                padding: 1.1rem 1.2rem;
-                overflow-x: auto;
-                overflow-y: auto;
-                max-height: 28rem;
-                border: 1px solid #d2c4b3;
-                background: #1c1712;
-                color: #f7efe2;
-                line-height: 1.6;
-                tab-size: 2;
-            }
-
-            pre code {
-                display: block;
-                font-size: 0.9rem;
-            }
-
-            .code-label {
-                margin: 1.15rem 0 0.5rem;
-                color: var(--muted);
-                font-family: "Helvetica Neue", Arial, sans-serif;
-                font-size: 0.78rem;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-            }
-
-            details.code-block {
-                margin-top: 1rem;
-                border: 1px solid var(--line);
-                background: var(--panel);
-            }
-
-            details.code-block summary {
-                cursor: pointer;
-                list-style: none;
-                padding: 0.95rem 1rem;
-                font-family: "Helvetica Neue", Arial, sans-serif;
-                font-size: 0.82rem;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                color: var(--ink);
-            }
-
-            details.code-block summary::-webkit-details-marker {
-                display: none;
-            }
-
-            details.code-block summary::before {
-                content: "+ ";
-                color: var(--accent);
-            }
-
-            details.code-block[open] summary::before {
-                content: "− ";
-            }
-
-            details.code-block .code-wrap {
-                padding: 0 1rem 1rem;
-            }
-
-            footer {
-                margin-top: 2.5rem;
-                padding-top: 1rem;
-                border-top: 1px solid var(--line);
-            }
-
-            footer p {
-                margin: 0;
-                font-size: 0.98rem;
-            }
-
-            @media (max-width: 640px) {
-                .page {
-                    padding-top: 2rem;
-                }
-
-                .card {
-                    padding: 1.15rem;
-                }
-
-                p,
-                li {
-                    font-size: 1rem;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <main class="page">
-            <header>
-                <p class="eyebrow">Rubot</p>
-                <h1>Agentic Internal Tools.</h1>
-            </header>
-
-            <section class="intro card">
-                <h2>Why this</h2>
-                <p class="lead">
-                    I am not fully sold on handing crucial operations to
-                    probabilistic agents and calling it automation.
-                </p>
-                <p>
-                    Large models are useful, but they still hallucinate, drift,
-                    and fail in ways that are hard to predict ahead of time.
-                    That is tolerable for low-stakes drafting. It is much less
-                    tolerable when the system is touching customer records,
-                    moving money, making decisions, or triggering downstream
-                    work that people will have to clean up later.
-                </p>
-                <p>
-                    Rubot exists because the interesting problem is not “how do
-                    I let an agent run wild?” It is “how do I build AI-assisted
-                    workflows with boundaries, state, approvals, traces, and
-                    sane failure modes?”
-                </p>
-            </section>
-
-            <section class="card">
-                <h2>What Rubot is</h2>
-                <p>
-                    Rubot is a Rails-native framework for building agentic
-                    internal tools with durable workflow state, approvals, and
-                    operator oversight.
-                </p>
-                <p>
-                    The intended shape is simple: your app keeps the
-                    product-facing UI, while <code>Tool</code>,
-                    <code>Agent</code>, <code>Workflow</code>, and
-                    <code>Operation</code> classes hold the execution logic.
-                </p>
-                <ul>
-                    <li>
-                        <code>Rubot::Tool</code> for explicit application
-                        actions
-                    </li>
-                    <li>
-                        <code>Rubot::Agent</code> for structured reasoning
-                        participants
-                    </li>
-                    <li>
-                        <code>Rubot::Workflow</code> for ordered, resumable
-                        orchestration
-                    </li>
-                    <li>
-                        <code>Rubot::Operation</code> for feature-level
-                        composition
-                    </li>
-                </ul>
-            </section>
-
-            <section class="card">
-                <h2>What it includes</h2>
-                <p>
-                    Rubot includes the runtime pieces you need to make these
-                    systems inspectable instead of magical: runs, events,
-                    approvals, checkpoints, replay support, policy hooks, Rails
-                    integration, and a small admin surface for operating
-                    workflows.
-                </p>
-                <p>
-                    The goal is not maximum autonomy. The goal is durable,
-                    governed execution with enough structure that you can trust
-                    what the system is doing and debug it when it goes wrong.
-                </p>
-            </section>
-
-            <section class="card">
-                <h2>When this is worth it</h2>
-                <p>
-                    If all you need is a one-off script that fetches a page and
-                    asks an LLM for an opinion, Rubot is probably too much. A
-                    small Ruby script is simpler.
-                </p>
-                <p>
-                    Rubot becomes useful when that script turns into a real
-                    business process inside Rails and you suddenly need the
-                    plumbing around the model call:
-                </p>
-                <ul>
-                    <li>
-                        resumable runs when a human approval pauses the process
-                        for hours or days
-                    </li>
-                    <li>
-                        schema enforcement so model output failures become
-                        ordinary Ruby errors instead of silent bad state
-                    </li>
-                    <li>
-                        an event trail for auditability, debugging, and “why did
-                        this happen?” questions
-                    </li>
-                    <li>
-                        standard seams for testing tools, workflows, and agent
-                        outputs without rebuilding the harness every time
-                    </li>
-                </ul>
-                <p>
-                    In short: if humans need to trust it, review it, resume it,
-                    or explain it later, Rubot starts earning its keep.
-                </p>
-            </section>
-
-            <section class="card">
-                <h2>Example</h2>
-                <p>
-                    Here is a toy example featuring all four primitives:
-                    deterministic policy lookup, website retrieval, an agent
-                    reviewing conference fit, and an operation that routes
-                    strong low-risk requests down an automatic path while
-                    sending the rest through human approval.
-                </p>
-                <details class="code-block">
-                    <summary>toy_example.rb</summary>
-                    <div class="code-wrap">
-                        <pre><code>class LoadTravelPolicy &lt; Rubot::Tool
-  description "Load company travel policy and budget rules."
-
-  input_schema do
-    string :employee_id
-    string :conference_name
-    string :conference_url
-    integer :estimated_cost_cents
-  end
-
-  output_schema do
-    string :employee_id
-    string :conference_name
-    string :conference_url
-    integer :estimated_cost_cents
-    integer :budget_limit_cents
-    array :allowed_topics, of: :string
-  end
-
-  def call(employee_id:, conference_name:, conference_url:, estimated_cost_cents:)
-    # Tools should stay deterministic. This one only loads policy facts.
-    policy = travel_policy_for(employee_id: employee_id, conference_name: conference_name)
-
-    {
-      employee_id: employee_id,
-      conference_name: conference_name,
-      conference_url: conference_url,
-      estimated_cost_cents: estimated_cost_cents,
-      budget_limit_cents: policy.fetch(:budget_limit_cents),
-      allowed_topics: policy.fetch(:allowed_topics)
-    }
-  end
-
-  private
-
-  def travel_policy_for(employee_id:, conference_name:)
-    TravelPolicyRepository.fetch(employee_id:, conference_name:)
-  end
-end
-
-class FetchConferenceWebsite &lt; Rubot::Tool
-  description "Fetch public conference website content for review."
-
-  input_schema do
-    string :conference_url
-  end
-
-  output_schema do
-    string :conference_url
-    string :page_title
-    string :page_text
-  end
-
-  def call(conference_url:)
-    # Fetching the page is deterministic; interpreting it is not.
-    response = Faraday.get(conference_url)
-
-    {
-      conference_url: conference_url,
-      page_title: extract_title(response.body),
-      page_text: extract_visible_text(response.body)
-    }
-  end
-
-  private
-
-  def extract_title(html)
-    Nokogiri::HTML(html).at("title")&amp;.text.to_s
-  end
-
-  def extract_visible_text(html)
-    Nokogiri::HTML(html).text.gsub(/\s+/, " ").strip
-  end
-end
-
-class ReviewConferenceFit &lt; Rubot::Agent
-  instructions do
-    "Review the conference website content and determine whether the agenda
-     aligns with the allowed company topics. Explain your reasoning briefly."
-  end
-
-  input_schema do
-    string :conference_name
-    string :conference_url
-    string :page_title
-    string :page_text
-    array :allowed_topics, of: :string
-  end
-
-  output_schema do
-    boolean :content_matches_policy
-    float :confidence_score
-    array :matched_topics, of: :string
-    array :risks, of: :string
-    string :summary
-  end
-end
-
-class ConferenceTravelReviewWorkflow &lt; Rubot::Workflow
-  tool_step :policy,
-            tool: LoadTravelPolicy,
-            input: -&gt;(input, _state, _context) do
-              input.slice(:employee_id, :conference_name, :conference_url, :estimated_cost_cents)
-            end
-
-  tool_step :conference_site,
-            tool: FetchConferenceWebsite,
-            input: -&gt;(_input, state, _context) do
-              { conference_url: state.fetch(:policy).fetch(:conference_url) }
-            end
-
-  agent_step :conference_review,
-             agent: ReviewConferenceFit,
-             input: -&gt;(_input, state, _context) do
-               # The agent gets a single structured payload assembled from
-               # deterministic steps.
-               state.fetch(:policy).merge(state.fetch(:conference_site))
-             end
-
-  step :finalize
-
-  def finalize
-    # Workflow policy is authoritative. The model advises; the workflow decides.
-    policy = run.state.fetch(:policy)
-    review = run.state.fetch(:conference_review)
-    within_budget = policy.fetch(:estimated_cost_cents) &lt;= policy.fetch(:budget_limit_cents)
-    auto_approvable =
-      within_budget &amp;&amp;
-      review.fetch(:content_matches_policy) &amp;&amp;
-      review.fetch(:confidence_score) &gt;= 0.90 &amp;&amp;
-      review.fetch(:risks).empty?
-
-    run.state[:finalize] = {
-      employee_id: policy.fetch(:employee_id),
-      conference_name: policy.fetch(:conference_name),
-      within_budget: within_budget,
-      content_matches_policy: review.fetch(:content_matches_policy),
-      confidence_score: review.fetch(:confidence_score),
-      auto_approvable: auto_approvable,
-      recommended: auto_approvable,
-      review_summary: review.fetch(:summary),
-      matched_topics: review.fetch(:matched_topics),
-      risks: review.fetch(:risks)
-    }
-  end
-end
-
-class ConferenceTravelManualApprovalWorkflow &lt; Rubot::Workflow
-  step :hydrate_review
-  approval_step :manager_review,
-                role: "engineering_manager",
-                reason: "Conference travel requires human approval."
-  step :finalize
-
-  def hydrate_review
-    run.state[:finalize] = run.input.fetch(:review)
-  end
-
-  def finalize
-    run.state[:finalize] = run.state.fetch(:finalize).merge(
-      approval: run.approvals.last&amp;.decision_payload,
-      auto_approvable: false
-    )
-  end
-end
-
-class ConferenceTravelApprovalOperation &lt; Rubot::Operation
-  def self.launch(input:, subject: nil, context: {})
-    review_run = Rubot.run(
-      ConferenceTravelReviewWorkflow,
-      input: input,
-      subject: subject,
-      context: context
-    )
-
-    review = review_run.output
-    return review_run if review.fetch(:auto_approvable)
-
-    Rubot.run(
-      ConferenceTravelManualApprovalWorkflow,
-      input: { review: review },
-      subject: subject,
-      context: context
-    )
-  end
-end</code></pre>
-                    </div>
-                </details>
-
-                <details class="code-block">
-                    <summary>simulated_run.rb</summary>
-                    <div class="code-wrap">
-                        <pre><code>input = {
-  employee_id: "emp_42",
-  conference_name: "Rails World",
-  conference_url: "https://rubyonrails.org/world",
-  estimated_cost_cents: 132_500
-}
-
-run = ConferenceTravelApprovalOperation.launch(input: input)
-
-# internal output from LoadTravelPolicy
-# {
-#   employee_id: "emp_42",
-#   conference_name: "Rails World",
-#   conference_url: "https://rubyonrails.org/world",
-#   estimated_cost_cents: 132_500,
-#   budget_limit_cents: 150_000,
-#   allowed_topics: ["ruby", "rails", "developer tools", "ai infrastructure"]
-# }
-
-# internal output from FetchConferenceWebsite
-# {
-#   conference_url: "https://rubyonrails.org/world",
-#   page_title: "Rails World 2026",
-#   page_text: "Talks on Rails performance, Ruby tooling, AI infrastructure, and platform engineering."
-# }
-
-# internal output from ReviewConferenceFit
-# {
-#   content_matches_policy: true,
-#   confidence_score: 0.94,
-#   matched_topics: ["ruby", "rails", "ai infrastructure"],
-#   risks: [],
-#   summary: "The agenda is directly relevant to our platform team's work."
-# }
-
-# review workflow output
-# {
-#   employee_id: "emp_42",
-#   conference_name: "Rails World",
-#   within_budget: true,
-#   content_matches_policy: true,
-#   confidence_score: 0.94,
-#   auto_approvable: true,
-#   recommended: true,
-#   review_summary: "The agenda is directly relevant to our platform team's work.",
-#   matched_topics: ["ruby", "rails", "ai infrastructure"],
-#   risks: []
-# }
-#
-# because auto_approvable is true, the operation returns that run directly.
-
-# run.output
-# {
-#   employee_id: "emp_42",
-#   conference_name: "Rails World",
-#   within_budget: true,
-#   content_matches_policy: true,
-#   confidence_score: 0.94,
-#   auto_approvable: true,
-#   recommended: true,
-#   review_summary: "The agenda is directly relevant to our platform team's work.",
-#   matched_topics: ["ruby", "rails", "ai infrastructure"],
-#   risks: [],
-# }
-#
-# if confidence_score were 0.61 or risks were present, the operation would
-# start ConferenceTravelManualApprovalWorkflow instead.
-#
-# in a real Rails app, approval would usually happen through the Rubot
-# dashboard or a custom application UI.
-#
-# run.waiting_for_approval? # =&gt; true
-# run.approve!(approved_by: "manager@example.com")
-# Rubot::Executor.new.resume(ConferenceTravelManualApprovalWorkflow, run)
-#
-# run.output
-# {
-#   employee_id: "emp_42",
-#   conference_name: "Rails World",
-#   within_budget: false,
-#   content_matches_policy: true,
-#   confidence_score: 0.61,
-#   auto_approvable: false,
-#   recommended: false,
-#   review_summary: "Relevant, but the budget is high and the agenda is mixed.",
-#   matched_topics: ["ruby"],
-#   risks: ["budget exceeds policy threshold"],
-#   approval: { approved_by: "manager@example.com" }
-# }</code></pre>
-                    </div>
-                </details>
-            </section>
-
-            <section>
-                <h2>Docs</h2>
-                <div class="links">
-                    <a
-                        class="link-row"
-                        href="https://github.com/bootstrapital/rubot/tree/main/docs"
-                    >
-                        <strong>Documentation Index</strong>
-                        <span
-                            >Browse the docs directory in the GitHub repo.</span
-                        >
-                    </a>
-                    <a
-                        class="link-row"
-                        href="https://github.com/bootstrapital/rubot/blob/main/README.md"
-                    >
-                        <strong>README</strong>
-                        <span>Brief project summary and examples.</span>
-                    </a>
-                    <a
-                        class="link-row"
-                        href="https://github.com/bootstrapital/rubot/blob/main/docs/quickstart.md"
-                    >
-                        <strong>Quickstart</strong>
-                        <span
-                            >Setup, first workflow, runtime model, and Rails
-                            integration.</span
-                        >
-                    </a>
-                    <a
-                        class="link-row"
-                        href="https://github.com/bootstrapital/rubot/blob/main/docs/public_api.md"
-                    >
-                        <strong>Public API</strong>
-                        <span
-                            >See which surfaces are public, provisional, and
-                            internal.</span
-                        >
-                    </a>
-                    <a
-                        class="link-row"
-                        href="https://github.com/bootstrapital/rubot/blob/main/docs/admin.md"
-                    >
-                        <strong>Admin Guide</strong>
-                        <span
-                            >Mount and operate the admin interface for runs and
-                            approvals.</span
-                        >
-                    </a>
-                </div>
-            </section>
-
-            <footer>
-                <p>Rubot. © 2026 Bootstrapital.</p>
-            </footer>
-        </main>
-    </body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>PDT — Process Dev Tools</title>
+    <meta
+      name="description"
+      content="PDT helps teams build code-owned operational workflows with AI-assisted authoring, governed execution, and maintainable structure."
+    />
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #0b0f19;
+        --muted: #2a2f3a;
+        --hairline: rgba(11, 15, 25, 0.12);
+        --chip: rgba(11, 15, 25, 0.06);
+        --focus: rgba(11, 15, 25, 0.35);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, sans-serif;
+        letter-spacing: -0.015em;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      a.text-link {
+        text-decoration: underline;
+        text-decoration-color: var(--hairline);
+        text-underline-offset: 4px;
+        transition: text-decoration-color 120ms ease;
+      }
+
+      a.text-link:hover { text-decoration-color: var(--fg); }
+      a:focus { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+      .wrap {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 28px 28px 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .mark {
+        font-weight: 900;
+        letter-spacing: -0.06em;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .nav {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .nav a {
+        padding: 8px 10px;
+        border-radius: 999px;
+      }
+
+      .nav a:hover {
+        background: var(--chip);
+        color: var(--fg);
+      }
+
+      main {
+        flex: 1;
+        padding: 64px 28px 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 64px;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+      }
+
+      .headline {
+        font-size: clamp(72px, 10vw, 140px);
+        font-weight: 950;
+        letter-spacing: -0.08em;
+        line-height: 0.92;
+        margin: 0 0 18px -6px;
+        text-transform: uppercase;
+      }
+
+      .sub {
+        margin: 0 0 26px;
+        font-size: 18px;
+        line-height: 1.5;
+        color: var(--muted);
+        max-width: 60ch;
+      }
+
+      .sub strong {
+        color: var(--fg);
+        font-weight: 700;
+      }
+
+      .ctaRow {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 24px 0 0;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        height: 44px;
+        padding: 0 20px;
+        border-radius: 999px;
+        border: 1px solid var(--fg);
+        background: var(--fg);
+        color: var(--bg);
+        font-weight: 700;
+        font-size: 14px;
+        letter-spacing: -0.02em;
+        transition: transform 120ms ease, opacity 120ms ease;
+      }
+
+      .btn:hover { transform: translateY(-1px); opacity: 0.92; }
+
+      .btn.secondary {
+        background: transparent;
+        color: var(--fg);
+      }
+
+      .section-group {
+        display: flex;
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .kicker {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        border-bottom: 1px solid var(--hairline);
+        padding-bottom: 12px;
+        margin-bottom: -16px;
+      }
+
+      .block h3, .block h4 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+      }
+
+      .block p {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--muted);
+        max-width: 65ch;
+      }
+
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .chip {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: var(--chip);
+        font-size: 13px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      footer {
+        padding: 24px 28px 32px;
+        max-width: 800px;
+        width: 100%;
+        margin: 0 auto;
+        border-top: 1px solid var(--hairline);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 600px) {
+        main { padding-top: 48px; gap: 48px; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="mark">PDT</div>
+        <nav class="nav" aria-label="Primary">
+          <a href="#framework">Framework</a>
+          <a href="#workflow-engineering">Workflow Engineering</a>
+          <a href="#engagements">Engagements</a>
+        </nav>
+      </header>
+
+      <main>
+        <section>
+          <h1 class="headline">PDT</h1>
+          <p class="sub">
+            <strong>Process Dev Tools</strong> is workflow infrastructure for teams
+            building operational software with coding agents. It gives
+            AI-assisted workflows explicit structure: tools, workflows, approvals,
+            durable state, replay, and evaluation.
+          </p>
+
+          <p class="sub">
+            The goal is not to make automation look magical. The goal is to make
+            generated operational systems understandable, governable, and worth
+            keeping.
+          </p>
+
+          <div class="ctaRow">
+            <a class="btn" href="mailto:chris@pdt.dev?subject=PDT%20%E2%80%94%20Inquiry">
+              Contact: chris@pdt.dev
+            </a>
+            <a class="btn secondary" href="#framework">View the framework</a>
+          </div>
+        </section>
+
+        <section class="section-group" id="framework">
+          <div class="kicker">Framework</div>
+
+          <div class="block">
+            <h3>What PDT is</h3>
+            <p>
+              PDT helps teams turn recurring business processes into code-owned
+              systems. It is designed for workflows that involve multiple steps,
+              external tools, judgment, review, and operational risk.
+            </p>
+            <div class="chips">
+              <span class="chip">Operations as capability boundaries</span>
+              <span class="chip">Workflows as procedures</span>
+              <span class="chip">Tool boundaries for side effects</span>
+              <span class="chip">Approvals and replay</span>
+            </div>
+          </div>
+
+          <div class="block">
+            <h3>Why the framework matters</h3>
+            <p>
+              Coding agents can generate a lot of software. The useful question is
+              whether that software lands in a structure that engineering can
+              review and maintain. PDT is meant to provide that structure.
+            </p>
+            <div class="chips">
+              <span class="chip">Maintainable generated code</span>
+              <span class="chip">Governed execution</span>
+              <span class="chip">Operational auditability</span>
+              <span class="chip">Machine-to-machine ready</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-group" id="workflow-engineering">
+          <div class="kicker">Workflow Engineering</div>
+
+          <div class="block">
+            <h4>What we mean by it</h4>
+            <p>
+              Workflow engineering is the practice of building operational
+              software that coordinates systems, humans, policy, and AI. It sits
+              somewhere between ops design and software engineering.
+            </p>
+          </div>
+
+          <div class="block">
+            <h4>Who it is for</h4>
+            <p>
+              The clearest fit is teams in operations functions such as RevOps,
+              SalesOps, MarketingOps, SupportOps, and FinanceOps, along with the
+              engineers who need to own the systems those teams rely on.
+            </p>
+          </div>
+
+          <div class="block">
+            <h4>How PDT fits</h4>
+            <p>
+              PDT is intended to be the framework layer for that work: a way to
+              build operational systems through code generation without ending up
+              with brittle workflow glue.
+            </p>
+          </div>
+        </section>
+
+        <section class="section-group" id="engagements">
+          <div class="kicker">Engagements</div>
+
+          <div class="block">
+            <h4>Implementation and advisory</h4>
+            <p>
+              We work with teams that want to design, validate, and ship
+              workflow-engineered systems on the PDT stack. That can include
+              operational workflow design, framework adoption, or building the
+              first capability with your team.
+            </p>
+          </div>
+
+          <div class="block">
+            <h4>Examples of good fits</h4>
+            <p>
+              Dispute handling, approval-heavy reviews, intake and routing,
+              internal casework, operational audits, process mapping, and other
+              workflows where manual work is expensive but full automation would
+              still be irresponsible.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer>PDT - Process Dev Tools</footer>
+    </div>
+  </body>
 </html>

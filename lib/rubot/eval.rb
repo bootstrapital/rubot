@@ -111,14 +111,14 @@ module Rubot
         @rubot_eval_target
       end
 
-      def fixture(name, input: nil, subject: nil, context: {}, expected: nil, metadata: {}, &block)
+      def fixture(name, input: nil, subject: nil, context: {}, expected: nil, metadata: {}, tags: [], &block)
         fixtures << Fixture.new(
           name: name.to_sym,
           input: input,
           subject: subject,
           context: context,
           expected: expected,
-          metadata: metadata,
+          metadata: metadata.merge(tags: Array(tags)),
           block: block
         )
       end
@@ -145,16 +145,31 @@ module Rubot
         @rubot_eval_thresholds ||= []
       end
 
-      def run
-        new.run
+      def run(fixtures: nil, tags: nil)
+        new.run(fixtures:, tags:)
       end
     end
 
-    def run
+    def run(fixtures: nil, tags: nil)
       raise Rubot::ExecutionError, "#{self.class.name} must define a target" unless self.class.target
-      raise Rubot::ExecutionError, "#{self.class.name} must define at least one fixture" if self.class.fixtures.empty?
+      
+      selected_fixtures = self.class.fixtures
+      if fixtures
+        fixture_names = Array(fixtures).map(&:to_sym)
+        selected_fixtures = selected_fixtures.select { |f| fixture_names.include?(f.name) }
+      end
 
-      results = self.class.fixtures.map do |fixture_definition|
+      if tags
+        tags = Array(tags).map(&:to_sym)
+        selected_fixtures = selected_fixtures.select do |f|
+          f_tags = Array(f.metadata[:tags]).map(&:to_sym)
+          (f_tags & tags).any?
+        end
+      end
+
+      return nil if selected_fixtures.empty?
+
+      results = selected_fixtures.map do |fixture_definition|
         execute_fixture(fixture_definition)
       end
 
@@ -276,9 +291,9 @@ module Rubot
       end
     end
 
-    def run_eval(eval_or_name = nil)
-      reports = resolve_evals(eval_or_name).map(&:run)
-      reports.length == 1 ? reports.first : reports
+    def run_eval(eval_or_name = nil, fixtures: nil, tags: nil)
+      reports = resolve_evals(eval_or_name).map { |klass| klass.run(fixtures: fixtures, tags: tags) }.compact
+      reports.length == 1 && eval_or_name ? reports.first : reports
     end
 
     private

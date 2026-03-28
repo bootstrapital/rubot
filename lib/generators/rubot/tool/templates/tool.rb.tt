@@ -1,16 +1,25 @@
 class <%= class_name %> < Rubot::Tool
+  # The description is used by agents to understand when to use this tool
   description "Explain what this tool does."
-  idempotent!
+  
+  # Mark as idempotent if it's safe to retry without side effects
+  # idempotent!
 
+  # Define the required and optional inputs
   input_schema do
     string :subject_id
   end
 
+  # Define the structure of the successful response
   output_schema do
     string :message
   end
 
+  # The core execution logic
   def call(subject_id:)
+    # Use Rubot::HTTP for API calls to get automatic retries and logging
+    # response = Rubot::HTTP.get("https://api.example.com/v1/resource")
+    
     {
       message: "Handled #{subject_id}"
     }

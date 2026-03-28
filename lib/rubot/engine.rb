@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "action_dispatch"
 require "rails/engine"
 
 module Rubot

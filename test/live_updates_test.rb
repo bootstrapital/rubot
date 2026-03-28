@@ -43,18 +43,24 @@ class LiveUpdatesTest < Minitest::Test
   def test_run_persist_triggers_live_update_broadcast
     calls = []
     run = Rubot::Run.new(name: "ExampleAgent", kind: :agent, input: {}, persist: false)
+    live_updates_singleton = class << Rubot::LiveUpdates; self; end
 
     original_method = Rubot::LiveUpdates.method(:broadcast_run)
-    Rubot::LiveUpdates.define_singleton_method(:broadcast_run) do |persisted_run|
+    live_updates_singleton.send(:remove_method, :broadcast_run)
+    live_updates_singleton.send(:define_method, :broadcast_run) do |persisted_run|
       calls << persisted_run.id
     end
 
     run.persist!
 
-    Rubot::LiveUpdates.define_singleton_method(:broadcast_run, original_method)
+    live_updates_singleton.send(:remove_method, :broadcast_run) if live_updates_singleton.method_defined?(:broadcast_run)
+    live_updates_singleton.send(:define_method, :broadcast_run, original_method)
     assert_equal [run.id], calls
   ensure
-    Rubot::LiveUpdates.define_singleton_method(:broadcast_run, original_method) if original_method
+    if original_method
+      live_updates_singleton.send(:remove_method, :broadcast_run) if live_updates_singleton.method_defined?(:broadcast_run)
+      live_updates_singleton.send(:define_method, :broadcast_run, original_method)
+    end
   end
 
   def test_broadcaster_replaces_run_and_approval_targets

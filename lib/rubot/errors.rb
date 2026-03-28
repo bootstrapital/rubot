@@ -20,6 +20,17 @@ module Rubot
       super(message, category: :concurrency, **options)
     end
   end
+  class HTTPError < ExecutionError
+    attr_reader :status, :headers, :body, :details
+
+    def initialize(message = "HTTP request failed", status: nil, headers: {}, body: nil, details: {})
+      super(message)
+      @status = status
+      @headers = headers
+      @body = body
+      @details = details
+    end
+  end
   class CancellationError < ExecutionError; end
   class ApprovalRequired < Error; end
 end

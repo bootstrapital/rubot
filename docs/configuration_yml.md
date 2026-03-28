@@ -139,3 +139,68 @@ end
 ```
 
 In that example, the Ruby initializer wins.
+
+## Per-Agent YAML Configuration
+
+Rubot agents can also load an optional YAML file that sits next to the Ruby class file.
+
+Example:
+
+```ruby
+# app/agents/resume_screener/screening_agent.rb
+module ResumeScreener
+  class ScreeningAgent < Rubot::Agent
+    input_schema do
+      string :resume_text
+    end
+
+    output_schema do
+      string :summary
+    end
+  end
+end
+```
+
+```yaml
+# app/agents/resume_screener/screening_agent.yml
+instructions: |
+  You are a recruiting screener.
+  Review the resume against the selected role.
+model: gpt-5-mini
+description: Reviews resumes and returns a structured screening summary.
+tags:
+  - recruiting
+  - screening
+metadata:
+  owner: talent_ops
+  risk_level: medium
+```
+
+If you want a different file name, point the agent at it explicitly:
+
+```ruby
+class ScreeningAgent < Rubot::Agent
+  config_file "screening_agent.config.yml"
+end
+```
+
+Supported per-agent keys:
+
+- `instructions`: string
+- `model`: string
+- `description`: string
+- `tags`: array of strings
+- `metadata`: mapping
+
+Precedence for agent settings is:
+
+1. explicit Ruby declarations on the agent class
+2. per-agent YAML
+3. global `config/rubot.yml` defaults where applicable
+4. framework defaults
+
+Notes:
+
+- Ruby remains the source of truth for executable behavior
+- per-agent YAML is only for declarative prompt and metadata values
+- unsupported agent YAML keys fail during config load

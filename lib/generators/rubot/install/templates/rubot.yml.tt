@@ -1,0 +1,26 @@
+# Rubot Global Configuration
+# See https://github.com/google/rubot/docs/configuration_yml.md for all options
+
+default:
+  # The default LLM provider to use
+  provider: openai
+  # The default model name
+  default_model: gpt-4o
+  
+  # ActiveJob queue names for different Rubot background tasks
+  queues:
+    run: rubot_runs
+    step: rubot_steps
+    resume: rubot_resumes
+
+  # Feature flags
+  features:
+    live_updates: true
+
+development:
+  # Use a cheaper model for local development
+  default_model: gpt-4o-mini
+
+production:
+  # Ensure strict queue separation or higher-tier models in production
+  default_model: gpt-4o

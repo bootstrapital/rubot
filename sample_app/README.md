@@ -1,61 +1,45 @@
-# Sample Rubot App
+# Sample App
 
-This is a minimal Rails host app for previewing the Rubot engine locally and demonstrating a Rubot-powered Rails app with visible `app/tools`, `app/agents`, `app/workflows`, and `app/operations`.
+This app is a deliberately small host Rails application that demonstrates the intended Rubot integration pattern.
 
-## What it includes
+It shows:
 
-- mounts `Rubot::Engine` at `/rubot/admin`
-- serves an operations home page at `/`
-- serves the resume screener operation at `/ops/resume_screener`
-- uses `Rubot::Stores::ActiveRecordStore`
-- composes the feature across:
-  - [`app/operations/resume_screener/operation.rb`](./app/operations/resume_screener/operation.rb)
-  - [`app/tools/resume_screener/load_job_description_tool.rb`](./app/tools/resume_screener/load_job_description_tool.rb)
-  - [`app/tools/resume_screener/prepare_resume_tool.rb`](./app/tools/resume_screener/prepare_resume_tool.rb)
-  - [`app/agents/resume_screener/screening_agent.rb`](./app/agents/resume_screener/screening_agent.rb)
-  - [`app/workflows/resume_screener/workflow.rb`](./app/workflows/resume_screener/workflow.rb)
+- normal app routes, controllers, and views in the host app
+- a Rubot operation launched from an app controller
+- operation, workflow, tool, and agent code living in app-owned directories
+- the Rubot admin engine mounted separately at `/rubot/admin`
 
-## Run it
+The demo capability is a resume screener:
 
-Because this environment has both macOS system Ruby and Ruby 3.3 installed, use the explicit Ruby 3.3 binary when launching Rails:
+- the controller gathers form input
+- the operation owns the business entrypoint
+- the workflow sequences tools and the screening agent
+- the admin engine is used for run inspection, replay, approvals, and traces
 
-```bash
-cd sample_app
-/Users/datadavis/.rvm/rubies/ruby-3.3.0/bin/ruby -S bundle exec rails server
-```
+This app is intentionally not a large reference product. Its job is to show the host-app-plus-mounted-admin shape clearly.
 
-Then open:
+## Booting The Sample App
 
-```text
-http://localhost:3000
-```
+The sample app has its own Bundler and Rails boot boundary. Use the sample-app entrypoints rather than loading `sample_app/config/environment` through the repo root bundle.
 
-Useful routes:
-
-- `/`
-- `/ops/resume_screener`
-- `/rubot/admin`
-- `/rubot/admin/dashboard`
-- `/rubot/admin/playground`
-- `/rubot/admin/runs`
-- `/rubot/admin/approvals`
-
-## Gemini Configuration
-
-The demo works without an API key using a heuristic fallback scorer.
-
-To enable LLM-backed screening with RubyLLM and Gemini, set:
+From the repository root:
 
 ```bash
-export GEMINI_API_KEY=your_key_here
-export RUBOT_MODEL=gemini-3-flash-preview
+ruby bin/sample_app db:prepare
+ruby bin/sample_app server
 ```
 
-Then restart the Rails server.
+Or from inside `sample_app/`:
 
-The current configuration lives in [`config/initializers/rubot.rb`](./config/initializers/rubot.rb). It will:
+```bash
+bin/setup
+bin/rails server
+```
 
-- configure `RubyLLM` with `config.gemini_api_key = ENV["GEMINI_API_KEY"]`
-- configure Rubot to use [`Rubot::Providers::RubyLLM`](../lib/rubot/providers/ruby_llm.rb) with provider `"gemini"`
-- default the model to `gemini-3-flash-preview` unless `RUBOT_MODEL` is overridden
-- persist runs, approvals, events, and tool calls into the sample app database
+Why this matters:
+
+- `sample_app/config/boot.rb` pins `BUNDLE_GEMFILE` to `sample_app/Gemfile`
+- that keeps sample-app-only Rails framework choices isolated from the main Rubot gem path
+- the main repo should not depend on the sample app's boot assumptions
+
+Once the server is running, the host app is available at `/` and the mounted Rubot admin UI is available at `/rubot/admin`.

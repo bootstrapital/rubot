@@ -234,6 +234,11 @@ module Rubot
       checkpoints.reverse.find { |checkpoint| checkpoint[:step_name] == step_name.to_s }
     end
 
+    def clear_checkpoint!(step_name)
+      checkpoints.reject! { |checkpoint| checkpoint[:step_name] == step_name.to_s }
+      persist!
+    end
+
     def step_completed?(step_name)
       checkpoint_for(step_name)&.dig(:status) == "completed"
     end

@@ -1,0 +1,14 @@
+class <%= class_name %>Operation < Rubot::Operation
+  # Define shared components
+  # tool :my_tool, MyToolClass
+  # agent :my_agent, MyAgentClass
+  
+  # Register workflows
+  # workflow :default, MyWorkflowClass, default: true
+
+  # Define entrypoints for standard app interactions
+  entrypoint :submit, workflow: :default
+
+  # Define triggers for external events
+  # trigger :webhook, workflow: :default
+end

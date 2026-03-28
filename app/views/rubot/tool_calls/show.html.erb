@@ -17,41 +17,41 @@
         <%= rubot_warning_badges(@tool_call.warnings) %>
       <% end %>
 
-      <%= render "rubot/shared/detail_panel",
+      <%= rubot_detail_panel(
                  title: "Tool Overview",
                  badge: rubot_status_badge(@tool_call.status),
-                 badges: tool_overview_badges %>
-      <%= render "rubot/shared/schema_result",
+                 badges: tool_overview_badges) %>
+      <%= rubot_schema_result(
                  title: "Input",
                  meta: "Schema-driven result block",
                  schema: @tool_call.input_schema,
-                 payload: @tool_call.input %>
-      <%= render "rubot/shared/schema_result",
+                 payload: @tool_call.input) %>
+      <%= rubot_schema_result(
                  title: "Output",
                  meta: "Schema-driven result block",
                  schema: @tool_call.output_schema,
-                 payload: @tool_call.output %>
-      <%= render "rubot/shared/diff_block",
+                 payload: @tool_call.output) %>
+      <%= rubot_diff_block(
                  title: "Input / Output Diff",
                  meta: "Reusable diff block",
                  before_value: @tool_call.input,
-                 after_value: @tool_call.output %>
+                 after_value: @tool_call.output) %>
     </div>
 
     <aside class="rubot-workbench__side">
-      <%= render "rubot/shared/detail_panel",
+      <%= rubot_detail_panel(
                  title: "Execution",
                  items: [
                    { label: "Step", value: @tool_call.step_name || "unscoped" },
                    { label: "Duration", value: (@tool_call.duration_ms ? "#{@tool_call.duration_ms}ms" : "n/a") }
-                 ] %>
-      <%= render "rubot/shared/action_panel",
+                 ]) %>
+      <%= rubot_action_panel(
                  title: "Actions",
                  description: "Reusable action panel block for operator workflows.",
                  actions: [
                    link_to("Back to Run", rubot.run_path(@run.id), class: "rubot-button rubot-button--secondary"),
                    link_to("Approval Inbox", rubot.approvals_path, class: "rubot-button")
-                 ] %>
+                 ]) %>
     </aside>
   </section>
 

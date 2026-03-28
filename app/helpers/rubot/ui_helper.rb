@@ -128,5 +128,66 @@ module Rubot
     def rubot_json(value)
       JSON.pretty_generate(value || {})
     end
+
+    # Primitive UI Blocks
+
+    def rubot_action_panel(title:, meta: nil, description: nil, actions: [], &block)
+      content = capture(&block) if block_given?
+      render "rubot/shared/action_panel", title:, meta:, description:, actions:, content:
+    end
+
+    def rubot_data_table(rows:, columns:, empty_title: "No items", empty_body: "There are no items to display at this time.")
+      render "rubot/shared/data_table", rows:, columns:, empty_title:, empty_body:
+    end
+
+    def rubot_detail_panel(title:, items: [], body: nil, badge: nil, meta: nil, badges: nil, panel_class: nil)
+      render "rubot/shared/detail_panel", title:, items:, body:, badge:, meta:, badges:, panel_class:
+    end
+
+    def rubot_diff_block(title:, before_value:, after_value:, meta: nil)
+      render "rubot/shared/diff_block", title:, before_value:, after_value:, meta:
+    end
+
+    def rubot_schema_form(title:, schema:, url:, method: :post, values: nil, meta: nil, submit_label: "Submit")
+      render "rubot/shared/schema_form", title:, schema:, url:, method:, values:, meta:, submit_label:
+    end
+
+    def rubot_schema_result(title:, payload:, schema:, meta: nil)
+      render "rubot/shared/schema_result", title:, payload:, schema:, meta:
+    end
+
+    def rubot_stat(label:, value:, tone: "neutral")
+      render "rubot/shared/stat", label:, value:, tone:
+    end
+
+    def rubot_timeline_block(title:, events:, meta: nil)
+      render "rubot/shared/timeline_block", title:, events:, meta:
+    end
+
+    def rubot_trace_block(title:, grouped_events:)
+      render "rubot/shared/trace_block", title:, grouped_events:
+    end
+
+    # Composed Surfaces
+
+    def rubot_run_overview(run)
+      render "rubot/runs/overview", run:
+    end
+
+    def rubot_run_metrics(run)
+      render "rubot/runs/metrics", run:
+    end
+
+    def rubot_run_pending_approval(run)
+      render "rubot/runs/pending_approval", run:
+    end
+
+    def rubot_run_timeline(run)
+      render "rubot/runs/timeline", run:
+    end
+
+    def rubot_run_trace_viewer(run)
+      render "rubot/runs/trace_viewer", run:
+    end
   end
 end

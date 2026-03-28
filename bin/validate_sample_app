@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo "Validating sample app boot and execution boundary..."
+
+cd "$(dirname "$0")/../sample_app"
+
+# Ensure dependencies are installed within the isolated bundle
+bundle check > /dev/null || bundle install
+
+# Ensure database is prepared
+bundle exec rails db:prepare
+
+# Run a quick smoke test inside the actual Rails environment
+# This guarantees that the sample app works completely isolated from the main gem test suite's require paths.
+bundle exec rails runner "
+  puts 'Booted Rails environment.'
+  require 'json'
+  
+  run = ResumeScreener::Operation.launch(
+    payload: {
+      job_id: 'rails_support_engineer',
+      candidate_name: 'Ada Lovelace',
+      resume_text: 'Ada Lovelace\nRuby on Rails debugging SQL customer communication',
+      file_name: 'resume.txt',
+      content_type: 'text/plain'
+    },
+    context: {
+      submitted_from: 'validate_script'
+    }
+  )
+
+  if run.status == :completed
+    puts 'Smoke test passed. Run completed.'
+  else
+    puts 'Smoke test failed. Run status: #{run.status}'
+    exit 1
+  end
+"
+
+echo "Sample app validation successful!"

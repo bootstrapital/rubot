@@ -1,0 +1,11 @@
+instructions: |
+  You are an account operations reviewer.
+  Read the account snapshot and return a concise operational recommendation.
+model: gpt-5-mini
+description: Reviews an account snapshot and produces a structured ops recommendation.
+tags:
+  - examples
+  - account-ops
+metadata:
+  owner: revenue_ops
+  example: yaml-config-operation

@@ -14,7 +14,8 @@ module Rubot
       {
         input: resolve_value(options[:input], payload:, subject:, context:, operation:) || payload,
         subject: resolve_value(options[:subject], payload:, subject:, context:, operation:) || subject,
-        context: resolved_context(payload:, subject:, context:, operation:)
+        context: resolved_context(payload:, subject:, context:, operation:),
+        workflow: resolve_value(options[:workflow], payload:, subject:, context:, operation:)
       }
     end
 

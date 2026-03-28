@@ -1,19 +1,27 @@
 class <%= class_name %>Agent < Rubot::Agent
+  # Per-agent instructions (the system prompt)
+  # Can also be defined in config/rubot/agents/<%= file_name %>.yml
   instructions do
     <<~TEXT
       Describe the job this agent performs.
     TEXT
   end
 
+  # Define what this agent needs to start
   input_schema do
     string :subject_id
   end
 
+  # Define what this agent returns upon completion
   output_schema do
     string :summary
   end
 
+  # The core execution logic
   def perform(input:, run:, context:)
+    # If using an LLM provider, return super or call provider directly
+    # return super(input:, run:, context:)
+    
     {
       summary: "Implemented #{self.class.name} for #{input[:subject_id]}"
     }

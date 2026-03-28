@@ -9,7 +9,8 @@ module Rubot
                   :run_job_queue_name, :step_job_queue_name, :resume_job_queue_name,
                   :provider, :default_model, :default_provider_name, :agent_max_turns,
                   :admin_authorizer, :subject_locator, :subject_memory_adapter,
-                  :policy_adapter, :policy_actor_resolver, :features
+                  :policy_adapter, :policy_actor_resolver, :features,
+                  :http_timeout, :http_open_timeout, :http_retry_attempts
 
     def initialize
       @event_subscriber = nil
@@ -30,6 +31,9 @@ module Rubot
       @policy_adapter = nil
       @policy_actor_resolver = nil
       @features = {}
+      @http_timeout = 10
+      @http_open_timeout = 5
+      @http_retry_attempts = 2
     end
   end
 end

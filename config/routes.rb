@@ -11,4 +11,15 @@ Rubot::Engine.routes.draw do
     patch :approve, on: :member
     patch :reject, on: :member
   end
+
+  namespace :api do
+    resources :operations, only: %i[index show] do
+      post :launch, on: :member
+    end
+    resources :runs, only: [:show]
+    resources :approvals, only: [:index] do
+      patch :approve, on: :member
+      patch :reject, on: :member
+    end
+  end
 end

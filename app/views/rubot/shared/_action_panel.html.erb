@@ -1,20 +1,20 @@
 <article class="rubot-panel">
   <div class="rubot-page__header">
     <h2><%= title %></h2>
-    <% if local_assigns[:meta] %>
+    <% if local_assigns[:meta].present? %>
       <span class="rubot-card__meta"><%= meta %></span>
     <% end %>
   </div>
 
-  <% if local_assigns[:description] %>
+  <% if local_assigns[:description].present? %>
     <p class="rubot-card__meta"><%= description %></p>
   <% end %>
 
-  <% if local_assigns[:content] %>
+  <% if local_assigns[:content].present? %>
     <div class="rubot-action-panel__content"><%= content %></div>
   <% end %>
 
-  <% if local_assigns[:actions] %>
+  <% if local_assigns[:actions].present? && actions.any? %>
     <div class="rubot-actions">
       <% actions.each do |action| %>
         <%= action %>

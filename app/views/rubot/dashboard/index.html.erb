@@ -8,12 +8,12 @@
   </header>
 
   <section class="rubot-stats-grid">
-    <%= render "rubot/shared/stat", label: "Total Runs", value: @dashboard[:summary][:total_runs], tone: "neutral" %>
-    <%= render "rubot/shared/stat", label: "Active Runs", value: @dashboard[:summary][:active_runs], tone: "info" %>
-    <%= render "rubot/shared/stat", label: "Pending Approvals", value: @dashboard[:summary][:pending_approvals], tone: "warning" %>
-    <%= render "rubot/shared/stat", label: "Failed Runs", value: @dashboard[:summary][:failed_runs], tone: "danger" %>
-    <%= render "rubot/shared/stat", label: "Tool Success", value: (@dashboard[:summary][:tool_success_rate] ? "#{(@dashboard[:summary][:tool_success_rate] * 100).round}%": "n/a"), tone: "info" %>
-    <%= render "rubot/shared/stat", label: "Model Tokens", value: @dashboard[:summary][:total_model_tokens], tone: "neutral" %>
+    <%= rubot_stat label: "Total Runs", value: @dashboard[:summary][:total_runs], tone: "neutral" %>
+    <%= rubot_stat label: "Active Runs", value: @dashboard[:summary][:active_runs], tone: "info" %>
+    <%= rubot_stat label: "Pending Approvals", value: @dashboard[:summary][:pending_approvals], tone: "warning" %>
+    <%= rubot_stat label: "Failed Runs", value: @dashboard[:summary][:failed_runs], tone: "danger" %>
+    <%= rubot_stat label: "Tool Success", value: (@dashboard[:summary][:tool_success_rate] ? "#{(@dashboard[:summary][:tool_success_rate] * 100).round}%": "n/a"), tone: "info" %>
+    <%= rubot_stat label: "Model Tokens", value: @dashboard[:summary][:total_model_tokens], tone: "neutral" %>
   </section>
 
   <article class="rubot-panel">

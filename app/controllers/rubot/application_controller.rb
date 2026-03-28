@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "../../helpers/rubot/ui_helper"
+
 module Rubot
   class ApplicationController < ActionController::Base
     include Rubot::UiHelper

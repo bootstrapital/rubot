@@ -1,79 +1,61 @@
-# Rubot
+# Rubot: Serious Rails Framework for Agentic Workflows
 
-Rubot is a Rails-native framework for building agentic internal tools with durable workflow state, approvals, and operator oversight.
+Rubot is a Rails-native framework for building durable, governed, and observable AI workflows.
 
-It gives you a small set of primitives:
+While other AI frameworks focus on simple reasoning loops, Rubot is built for the "Full Iceberg" of production operations—handling the 80% of enterprise logic that involves waiting for humans, persisting through restarts, and providing an auditable event trail.
 
-- `Rubot::Tool` for explicit application actions
-- `Rubot::Agent` for structured reasoning participants
-- `Rubot::Workflow` for ordered, resumable orchestration
-- `Rubot::Operation` for feature-level composition
+## Why Rubot?
 
-Rubot is designed so product UI stays in your app, while execution logic lives in tools, agents, workflows, and operations.
+- **Durable by Default**: Every workflow step is checkpointed. If a worker restarts, the process resumes exactly where it left off.
+- **Human-in-the-Loop**: Native `approval_step` support allows workflows to pause for hours or days while waiting for a human decision.
+- **Rails-Native**: Seamlessly integrates with ActiveRecord, ActiveJob, and ActionController. No new infrastructure silos.
+- **Observable**: Every tool call, model response, and state change is captured in a durable `Run` record.
+- **Deterministic Visualization**: Generate Mermaid diagrams directly from your Ruby code to see your business logic in real-time.
 
-## When Rubot Fits
+[Read more: Why Rubot?](./docs/why_rubot.md)
 
-Rubot is for production workflows, not one-off scripts.
+## RevOps Comparison
 
-If you just want to fetch a page and ask a model for an opinion once, a small Ruby script is usually simpler. Rubot starts to pay for itself when the process needs durable state, approvals, resumability, schema enforcement, event history, and testing seams inside a Rails app.
+See how Rubot compares to "Raw" Rails, Mastra (TS), and LangGraph (Python) in a real-world billing dispute scenario:
 
-## Example: a tool
+[View Comparison Table](./examples/compare/README.md)
 
-```ruby
-class LookupAccount < Rubot::Tool
-  description "Load account context."
-  idempotent!
+## Core Primitives
 
-  input_schema do
-    string :account_id
-  end
+- **Operations**: The business capability boundary (e.g., `UnderwritingOperation`).
+- **Workflows**: The durable procedure (sequencing, approvals, retries).
+- **Agents**: The reasoning participants (LLM-driven logic).
+- **Tools**: The application actions (calling APIs, querying DBs).
+- **Runs**: The durable unit of execution.
 
-  output_schema do
-    string :account_id
-    string :status
-  end
-
-  def call(account_id:)
-    {
-      account_id: account_id,
-      status: "active"
-    }
-  end
-end
-```
-
-## Example: a workflow
+## Example
 
 ```ruby
 class AccountReviewWorkflow < Rubot::Workflow
   tool_step :lookup_account,
             tool: LookupAccount,
-            input: ->(input, _state, _context) { { account_id: input[:account_id] } }
+            input: from_input(:account_id)
 
-  approval_step :manager_review, role: "ops_manager"
-
-  step :finalize
-
-  def finalize
-    run.state[:finalize] = {
-      account: run.state.fetch(:lookup_account),
-      decision: run.approvals.last&.decision_payload
-    }
-  end
+  approval_step :manager_review, 
+                role: "ops_manager",
+                reason: "Human review required for high-value accounts."
+                
+  output :lookup_account
 end
 
+# Run synchronously or async
 run = Rubot.run(AccountReviewWorkflow, input: { account_id: "acct_123" })
 ```
 
-## Where To Start
+## Getting Started
 
-For setup, provider configuration, Rails integration, runtime behavior, approvals, async execution, evals, and the admin console, read the quickstart:
+```bash
+# Add to your Gemfile
+gem 'rubot'
 
-- [Quickstart](./docs/quickstart.md)
+# Install and migrate
+rails generate rubot:install
+rails db:migrate
+```
 
-Useful entry points:
-
-- [Basic workflow example](./examples/basic_workflow.rb)
-- [Public API boundary](./docs/public_api.md)
-- [Admin guide](./docs/admin.md)
-- [Tech spec](./tech-spec.md)
+[View the Quickstart Guide](./docs/quickstart.md) | [Concepts](./docs/concepts.md) | [Architecture](./docs/architecture.md)
