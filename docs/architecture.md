@@ -1,6 +1,6 @@
 # Rubot Architecture
 
-This guide is for understanding how Rubot fits together as workflow infrastructure with a Ruby runtime plus Rails packaging.
+This guide is for understanding how Rubot fits together as a Ruby workflow framework with a core runtime plus Rails packaging.
 
 The short version:
 

@@ -4,11 +4,11 @@ This guide is the shortest path from zero to a running Rubot workflow, but it al
 
 ## What Rubot Is
 
-Rubot is workflow infrastructure built on Rails for agent-assisted operational software with workflow state, approvals, replay, and human oversight.
+Rubot is a Ruby and Rails framework for building code-first operational workflows.
 
-If you only need a one-off script, Rubot is usually too much. The framework becomes useful when an AI-assisted task needs to live as a durable business process with checkpoints, approvals, auditability, and predictable failure handling.
+If you only need a one-off script, Rubot is usually too much. It becomes useful when a task needs to live as a durable business process with checkpoints, approvals, auditability, and predictable failure handling.
 
-The strongest in-process adoption path today is a Rails app, but the bigger idea is not "Rails workflow helpers." The bigger idea is a code-owned workflow runtime that gives generated or hand-written operational software a durable structure.
+The strongest in-process adoption path today is a Rails app, but the bigger idea is not just "Rails workflow helpers." Rubot gives generated or hand-written workflow software a durable structure.
 
 The intended Rails shape is:
 
@@ -60,7 +60,7 @@ Then require it:
 require "rubot"
 ```
 
-If you are evaluating Rubot strategically, the right comparison is usually not "can this replace a one-off script?" It is "does this give my generated or hand-authored operational workflow a structure I can trust later?"
+If you are evaluating Rubot strategically, the right comparison is usually not "can this replace a one-off script?" It is "does this give my generated or hand-authored workflow a structure I can trust later?"
 
 ## Build Your First Flow
 

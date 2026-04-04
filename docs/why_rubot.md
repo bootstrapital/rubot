@@ -1,20 +1,20 @@
 # Why Rubot?
 
-Rubot is a **Serious Rails Framework for Agentic Workflows**.
+Rubot is a Ruby and Rails framework for building code-first operational workflows.
 
-While many AI frameworks focus on the "Day 1" magic of LLM reasoning, Rubot is built for the "Day 2" reality of production operations.
+It is most useful when a workflow has to survive real operating conditions: waiting for people, preserving state, recording decisions, and staying understandable after the first version ships.
 
-## The "Full Iceberg" of Operational Complexity
+## Operational Work Needs More Than A Prompt Loop
 
-When you build an AI agent for a real business process (like billing disputes, loan underwriting, or security triage), the LLM reasoning is only the tip of the iceberg. Under the surface lies a massive amount of required infrastructure:
+When you build workflow software for a real business process like billing disputes, underwriting, or security triage, the reasoning step is only one part of the system. The rest usually includes:
 
 1.  **Durability**: What happens if the process takes 3 days because it's waiting for a human?
 2.  **Governance**: How do you ensure a VP approves any credit over $500?
 3.  **Observability**: Can you audit every single tool call and LLM response 6 months later?
 4.  **Resumability**: If a background job worker restarts, does the entire process start from scratch?
-5.  **Rails Integration**: Does it use your existing models, policies, and jobs, or is it a separate silo?
+5.  **Application fit**: Does it use your existing models, policies, and jobs, or does it become a separate silo?
 
-Rubot handles all of this natively.
+Rubot gives those concerns an explicit home in the framework.
 
 ## Rubot vs. The World
 
@@ -33,9 +33,9 @@ A `Run` is a durable, stateful, and observable record of an operation's executio
 
 ## When to use Rubot
 
-- You are building **internal tools** that leverage AI.
-- Your workflows involve **high-stakes decisions** requiring human oversight.
-- You need **auditability and durability** for compliance or operational stability.
-- You want a **Rails-native** experience that doesn't fragment your tech stack.
+- You are building workflow software around a business process, not just a one-off script.
+- Your workflows involve human review, approvals, or long-running state.
+- You need auditability and durability for operational stability or compliance.
+- You want a Ruby or Rails implementation that does not fragment your application stack.
 
 [View the RevOps Comparison](../examples/compare/README.md) for a deep dive into code differences.

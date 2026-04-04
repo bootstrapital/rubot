@@ -1,6 +1,6 @@
 # Competitive Matrix
 
-This document compares Rubot and the emerging PDT layer against nearby categories and competitors in operational workflow software.
+This document compares Rubot and the broader PDT direction against nearby categories and competitors in operational workflow software.
 
 It is not meant to be a perfect market map. The goal is to clarify where Rubot is strongest, what kinds of buyers or builders it fits best, and how to talk about the product without flattening it into adjacent categories.
 
@@ -8,8 +8,8 @@ It is not meant to be a perfect market map. The goal is to clarify where Rubot i
 
 The most important positioning shift is this:
 
-- Rubot is workflow infrastructure built on Rails
-- PDT is a curated library of installable operational capabilities built on Rubot
+- Rubot is the Ruby framework
+- PDT is the broader brand and product direction around workflow engineering
 
 That is intentionally broader than:
 
@@ -46,7 +46,7 @@ That matters because many adjacent products optimize for either:
 
 Rubot should optimize for:
 
-- code-to-own operational software
+- code-first operational workflows
 
 ## Comparison Lenses
 
@@ -61,13 +61,13 @@ This comparison is most useful when read through four lenses:
 
 | Product / Category | Best Short Description | Main Strength | Main Weakness Relative To Rubot + PDT | Positioning Lens |
 | --- | --- | --- | --- | --- |
-| `Rubot + PDT` | code-to-own workflow infrastructure for governed ops software | combines durable runs, approvals, replay, operator visibility, and installable ops capability in a code-first model | earlier ecosystem, narrower connector breadth, still building machine-facing surfaces | strongest where operational software must stay ownable after code generation |
+| `Rubot + PDT` | framework plus product direction for governed operational workflows | combines durable runs, approvals, replay, operator visibility, and a code-first model for operational software | earlier ecosystem, narrower connector breadth, still building machine-facing surfaces | strongest where operational software must stay maintainable after code generation |
 | Retool | internal app builder | fast UI assembly and strong internal-tool velocity | weaker as the long-term execution/governance layer for complex approval-heavy operations | great for interface-first internal tools; weaker when the workflow runtime itself is the product-critical piece |
-| Workato | connector-first enterprise automation | broad integrations and automation maturity | more system-to-system automation centric than code-owned operational workflow architecture | strongest when integration breadth is the main problem |
+| Workato | connector-first enterprise automation | broad integrations and automation maturity | more system-to-system automation centric than a code-first operational workflow framework | strongest when integration breadth is the main problem |
 | Temporal | durable execution runtime | excellent workflow durability semantics | lower-level and more infrastructure-like; more build-it-yourself for operator/product shape | strongest for teams wanting a workflow engine, not a higher-level operational framework |
 | LangGraph | agent-centric graph runtime | strong graph-oriented agent orchestration | less naturally centered on governed business operations and app-owned operational capability | strongest when agent orchestration is the center of gravity |
 | Camunda | enterprise process orchestration / BPM | governance, process rigor, enterprise process credibility | heavier BPM posture; less naturally codegen-first and application-owned | strongest when formal BPM is the dominant frame |
-| ServiceNow | enterprise workflow platform | broad enterprise operational footprint | heavyweight platform, slower adaptation, less elegant for code-owned operational software | strongest as enterprise standardization layer |
+| ServiceNow | enterprise workflow platform | broad enterprise operational footprint | heavyweight platform, slower adaptation, less elegant for code-first operational software | strongest as enterprise standardization layer |
 | Zapier / Make / n8n | connector-first automation | speed and accessibility for happy-path flows | weak for durable approvals, auditability, and long-lived operational state | strongest for lightweight automation, not governed operational software |
 | DIY build | custom ops software stack | total local flexibility | easy to create long-term architectural debt, especially with LLM-generated glue | strongest only when a team wants to own the infrastructure problem directly |
 
@@ -114,7 +114,7 @@ Rubot is better framed for cases where:
 The simplest way to say it is:
 
 - Retool helps you assemble internal applications quickly
-- Rubot helps you build operational software that remains ownable after generation
+- Rubot helps you build operational software that remains maintainable after generation
 
 ## Why This Is Different From Connector-First Automation
 
@@ -133,7 +133,7 @@ Rubot becomes the better fit when the center of gravity is:
 - approvals
 - operator review
 - durable case state
-- code-owned process logic
+- code-first process logic
 
 The positioning should be:
 
@@ -233,7 +233,7 @@ The strongest honest framing is:
 Rubot is strongest when you want:
 
 - governed operational workflows
-- code-owned systems
+- code-first systems
 - strong architecture under code generation
 - durable execution and operator visibility
 - a Rails-native path with room for broader machine-facing usage

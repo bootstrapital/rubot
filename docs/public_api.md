@@ -30,7 +30,7 @@ Public expectations:
 - `Rubot.configure` is the stable place to wire stores, providers, policy, and runtime defaults
 - apps should prefer these entrypoints over direct `Executor` or job usage
 
-These entrypoints are the main in-process control surface today. They are not yet the full machine-to-machine story, but they are the stable starting point for code-owned workflow execution.
+These entrypoints are the main in-process control surface today. They are not yet the full machine-to-machine story, but they are the stable starting point for code-first workflow execution.
 
 Internal counterparts:
 
@@ -202,7 +202,7 @@ Why provisional:
 
 Direction note:
 
-- `Operation` is a core part of Rubot's workflow-infrastructure story because it packages workflows, tools, agents, triggers, and entrypoints into a capability boundary.
+- `Operation` is a core part of Rubot's framework story because it packages workflows, tools, agents, triggers, and entrypoints into a capability boundary.
 - the concept is stable and strategically important even while specific parts of its API surface remain provisional.
 
 ## Public Runtime Records
@@ -275,7 +275,7 @@ Provisional configuration hooks:
 
 Why provisional:
 
-- both are functional today but may undergo refinement to support more complex PDT-era packaging and subject embedding patterns.
+- both are functional today but may undergo refinement to support more complex packaging and subject embedding patterns.
 
 ## Public Store Interfaces
 

@@ -20,7 +20,7 @@ As soon as the feature gets more real, though, you run into a different set of q
 
 This document answers those questions.
 
-Rails is still the strongest in-process host path for Rubot today, but the architectural distinctions here matter more broadly than a Rails-only framing. They are what make Rubot useful as code-owned workflow infrastructure rather than just a handful of helper APIs.
+Rails is still the strongest in-process host path for Rubot today, but the architectural distinctions here matter more broadly than a Rails-only framing. They are what make Rubot useful as a framework for code-first operational workflows rather than just a handful of helper APIs.
 
 ## The Short Version
 
@@ -295,7 +295,7 @@ Rubot owns:
 - run history
 - trace and operator inspection
 
-That boundary is one of the reasons Rubot works well as workflow infrastructure built on Rails: the host app remains the host, while Rubot owns the execution and governance layer.
+That boundary is one of the reasons Rubot works well as a workflow framework in Rails: the host app remains the host, while Rubot owns the execution and governance layer.
 
 So in Rails terms:
 

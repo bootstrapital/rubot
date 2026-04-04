@@ -1,16 +1,18 @@
-# Rubot: Serious Rails Framework for Agentic Workflows
+# Rubot: A Ruby Framework for Workflow Engineering
 
-Rubot is a Rails-native framework for building durable, governed, and observable AI workflows.
+Rubot is a Ruby and Rails framework for building code-first operational workflows.
 
-While other AI frameworks focus on simple reasoning loops, Rubot is built for the "Full Iceberg" of production operations—handling the 80% of enterprise logic that involves waiting for humans, persisting through restarts, and providing an auditable event trail.
+It is designed for workflows that need more than a single reasoning loop: durable state, human review, replay, traceability, and a clear separation between tools, agents, workflows, and business capabilities.
+
+Rubot is built by PDT.
 
 ## Why Rubot?
 
-- **Durable by Default**: Every workflow step is checkpointed. If a worker restarts, the process resumes exactly where it left off.
-- **Human-in-the-Loop**: Native `approval_step` support allows workflows to pause for hours or days while waiting for a human decision.
-- **Rails-Native**: Seamlessly integrates with ActiveRecord, ActiveJob, and ActionController. No new infrastructure silos.
-- **Observable**: Every tool call, model response, and state change is captured in a durable `Run` record.
-- **Deterministic Visualization**: Generate Mermaid diagrams directly from your Ruby code to see your business logic in real-time.
+- **Durable runs**: workflow steps are checkpointed so long-running work can resume after restarts.
+- **Human review**: `approval_step` lets a workflow pause for a person to approve, reject, or request changes.
+- **Ruby and Rails fit**: Rubot works well inside a Rails app and follows normal Ruby application structure.
+- **Traceability**: runs capture events, approvals, tool calls, and public output in one place.
+- **Explicit structure**: tools handle actions, agents handle judgment, workflows handle procedure, and operations package business capabilities.
 
 [Read more: Why Rubot?](./docs/why_rubot.md)
 
