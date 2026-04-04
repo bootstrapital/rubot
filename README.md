@@ -52,6 +52,13 @@ run = Rubot.run(AccountReviewWorkflow, input: { account_id: "acct_123" })
 ## Getting Started
 
 ```bash
+# Clone and bootstrap the gem development environment
+bin/setup
+
+# If you want the sample Rails app too
+bin/setup --sample-app
+
+# Or add Rubot to an existing Rails app
 # Add to your Gemfile
 gem 'rubot'
 

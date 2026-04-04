@@ -22,7 +22,11 @@ module Rubot
 
       authorize_rubot_action!(:approve, run:)
       run.approve!(approval_payload)
-      Rubot::Executor.new.resume(Object.const_get(run.name), run) if workflow_class?(run.name)
+      
+      if (klass = workflow_class(run.name))
+        Rubot::Executor.new.resume(klass, run)
+      end
+      
       redirect_to rubot.run_path(run.id), notice: "Approval recorded."
     end
 
@@ -44,8 +48,9 @@ module Rubot
       }
     end
 
-    def workflow_class?(class_name)
-      Object.const_defined?(class_name) && Object.const_get(class_name) < Rubot::Workflow
+    def workflow_class(class_name)
+      klass = class_name.to_s.safe_constantize
+      klass if klass && klass < Rubot::Workflow
     end
   end
 end

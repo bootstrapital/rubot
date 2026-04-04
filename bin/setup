@@ -1,0 +1,138 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "rbconfig"
+require "rubygems"
+
+ROOT = File.expand_path("..", __dir__)
+SAMPLE_APP_ROOT = File.join(ROOT, "sample_app")
+REQUIRED_RUBY_VERSION = Gem::Requirement.new(">= 3.1")
+SAMPLE_APP_RUBY_VERSION = Gem::Requirement.new("= 3.3.0")
+WITH_SAMPLE_APP_FLAGS = ["--sample-app", "--with-sample-app"].freeze
+
+def say(message)
+  puts message
+end
+
+def success(message)
+  say "== #{message}"
+end
+
+def warning(message)
+  warn "WARN: #{message}"
+end
+
+def failure(message)
+  warn "ERROR: #{message}"
+  exit 1
+end
+
+def run!(*command, chdir: nil)
+  Dir.chdir(chdir || ROOT) do
+    system(*command) || failure("Command failed: #{command.join(' ')}")
+  end
+end
+
+def run(*command, chdir: nil)
+  Dir.chdir(chdir || ROOT) do
+    system(*command)
+  end
+end
+
+def command_available?(command)
+  exts = ENV.fetch("PATHEXT", "").split(";")
+  ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? do |path|
+    exts = [""] if exts.empty?
+    exts.any? { |ext| File.executable?(File.join(path, "#{command}#{ext}")) }
+  end
+end
+
+def ensure_ruby!
+  version = Gem::Version.new(RUBY_VERSION)
+
+  failure("Ruby #{RUBY_VERSION} is too old. Rubot requires Ruby >= 3.1.") unless REQUIRED_RUBY_VERSION.satisfied_by?(version)
+end
+
+def ensure_sample_app_ruby!
+  version = Gem::Version.new(RUBY_VERSION)
+
+  unless SAMPLE_APP_RUBY_VERSION.satisfied_by?(version)
+    warning("Ruby #{RUBY_VERSION} can install the gem, but the sample app is pinned to Ruby 3.3.0 in sample_app/Gemfile.")
+    warning("Use Ruby 3.3.0 if you want to boot the sample app unchanged.")
+  end
+end
+
+def ensure_bundler!
+  return if command_available?("bundle")
+
+  success("Installing Bundler")
+  run!(Gem.ruby, "-S", "gem", "install", "bundler")
+end
+
+def install_root_bundle!
+  success("Installing Rubot gem dependencies")
+  run!("bundle", "install") unless run("bundle", "check")
+end
+
+def install_sample_bundle!
+  success("Installing sample app dependencies")
+  run!("bundle", "install", chdir: SAMPLE_APP_ROOT) unless run("bundle", "check", chdir: SAMPLE_APP_ROOT)
+end
+
+def prepare_sample_app!
+  database_path = File.join(SAMPLE_APP_ROOT, "storage", "development.sqlite3")
+
+  if File.exist?(database_path)
+    success("Using existing sample app database")
+  else
+    warning("Expected sample app database at #{database_path}, but it was not found.")
+    warning("The sample app currently ships without working Rails db tasks in this checkout.")
+  end
+
+  success("Verifying sample app boot")
+  run!("./bin/rails", "runner", "puts 'Sample app boot verified'", chdir: SAMPLE_APP_ROOT)
+end
+
+def parse_args(argv)
+  options = { with_sample_app: false }
+
+  argv.each do |arg|
+    if WITH_SAMPLE_APP_FLAGS.include?(arg)
+      options[:with_sample_app] = true
+    else
+      failure("Unknown option: #{arg}")
+    end
+  end
+
+  options
+end
+
+def print_next_steps(with_sample_app:)
+  success("Setup complete")
+  say ""
+  say "Next steps:"
+
+  if with_sample_app
+    say "  1. Start the sample app: ruby bin/sample_app server"
+    say "  2. Open http://localhost:3000"
+    say "  3. Open http://localhost:3000/rubot/admin"
+  else
+    say "  1. Run the test suite: bundle exec ruby -Itest test/**/*_test.rb"
+    say "  2. Bootstrap the sample app later with: bin/setup --sample-app"
+  end
+end
+
+options = parse_args(ARGV)
+
+ensure_ruby!
+ensure_bundler!
+install_root_bundle!
+
+if options[:with_sample_app]
+  ensure_sample_app_ruby!
+  install_sample_bundle!
+  prepare_sample_app!
+end
+
+print_next_steps(with_sample_app: options[:with_sample_app])

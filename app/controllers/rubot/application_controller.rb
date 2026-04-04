@@ -4,6 +4,7 @@ require_relative "../../helpers/rubot/ui_helper"
 
 module Rubot
   class ApplicationController < ActionController::Base
+    protect_from_forgery with: :exception
     include Rubot::UiHelper
 
     layout "rubot/application"

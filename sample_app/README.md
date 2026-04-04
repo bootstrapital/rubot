@@ -25,7 +25,7 @@ The sample app has its own Bundler and Rails boot boundary. Use the sample-app e
 From the repository root:
 
 ```bash
-ruby bin/sample_app db:prepare
+bin/setup --sample-app
 ruby bin/sample_app server
 ```
 
