@@ -65,3 +65,4 @@ build-iPhoneSimulator/
 /sample_app/storage/*
 !/sample_app/storage/.keep
 /sample_app/config/master.key
+.DS_Store
