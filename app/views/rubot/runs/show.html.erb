@@ -3,59 +3,90 @@
     <%= turbo_stream_from Rubot::LiveUpdates.run_stream_name(@run.id) %>
   <% end %>
 
-  <header class="rubot-page__header">
-    <div>
+  <% tabs = {
+    "overview" => "Overview",
+    "execution" => "Execution",
+    "trace" => "Trace",
+    "metrics" => "Metrics"
+  } %>
+  <% base_params = {} %>
+  <% base_params[:compare_to] = params[:compare_to] if params[:compare_to].present? %>
+
+  <header class="rubot-page__hero">
+    <div class="rubot-page__title">
       <p class="rubot-eyebrow">Run</p>
       <h1><%= @run.name %></h1>
+      <div class="rubot-page__meta">
+        <span class="rubot-page__meta-chip">Current step: <%= @run.current_step %></span>
+        <span class="rubot-page__meta-chip">Status: <%= @run.run.status.to_s.tr("_", " ") %></span>
+        <span class="rubot-page__meta-chip">Trace: <%= @run.trace_id %></span>
+        <% if @run.replay_of_run_id %>
+          <span class="rubot-page__meta-chip">Replay of <%= @run.replay_of_run_id %></span>
+        <% end %>
+      </div>
     </div>
     <div class="rubot-actions">
-      <%= button_to "Replay Run", rubot.replay_run_path(@run.id), method: :post, class: "rubot-button" %>
-      <%= link_to "All Runs", rubot.runs_path, class: "rubot-link" %>
-      <%= link_to "Approval Inbox", rubot.approvals_path, class: "rubot-link" %>
+      <details class="rubot-menu">
+        <summary class="rubot-menu__trigger" aria-label="Run actions">Actions</summary>
+        <div class="rubot-menu__content">
+          <%= link_to "All Runs", rubot.runs_path, class: "rubot-menu__item" %>
+          <%= link_to "Open Execution View", rubot.run_path(@run.id, base_params.merge(tab: "execution")), class: "rubot-menu__item" %>
+          <%= link_to "Open Trace View", rubot.run_path(@run.id, base_params.merge(tab: "trace")), class: "rubot-menu__item" %>
+          <%= link_to "Open Metrics View", rubot.run_path(@run.id, base_params.merge(tab: "metrics")), class: "rubot-menu__item" %>
+          <%= button_to "Replay Run", rubot.replay_run_path(@run.id), method: :post, class: "rubot-menu__item rubot-menu__item--button" %>
+        </div>
+      </details>
     </div>
   </header>
 
-  <section class="rubot-panel-grid">
-    <%= render "overview", run: @run %>
-    <%= render "output", run: @run %>
-  </section>
-
   <% if @run.failed? %>
-    <article class="rubot-panel rubot-panel--danger">
-      <h2>Failure</h2>
+    <article class="rubot-panel rubot-panel--danger rubot-state-banner">
+      <div class="rubot-page__header">
+        <h2>Run failed</h2>
+        <%= rubot_status_badge(@run.run.status) %>
+      </div>
       <pre><%= rubot_json(@run.error) %></pre>
     </article>
   <% end %>
 
-  <% if @run.subject_label %>
-    <article class="rubot-panel">
-      <h2>Subject</h2>
-      <p><%= @run.subject_label %></p>
-    </article>
-  <% end %>
-
-  <article class="rubot-panel">
-    <h2>Trace</h2>
-    <dl class="rubot-kv">
-      <dt>Trace ID</dt>
-      <dd><%= @run.trace_id %></dd>
-      <dt>Replay Of</dt>
-      <dd><%= @run.replay_of_run_id || "original run" %></dd>
-    </dl>
-  </article>
-
-  <% if @comparison_run %>
-    <%= render "rubot/shared/diff_block",
-               title: "Replay Comparison",
-               meta: "Comparing #{@comparison_run.id} to #{@run.id}",
-               before_value: @comparison_run.output,
-               after_value: @run.output %>
-  <% end %>
-
-  <%= render "metrics", run: @run %>
   <%= render "pending_approval", run: @run %>
-  <%= render "steps", run: @run %>
-  <%= render "tool_calls", run: @run %>
-  <%= render "trace_viewer", run: @run %>
-  <%= render "timeline", run: @run %>
+
+  <div class="rubot-detail-layout">
+    <%= render "summary_rail", run: @run %>
+
+    <div class="rubot-detail-layout__main">
+      <nav class="rubot-tabs" aria-label="Run detail views">
+        <% tabs.each do |key, label| %>
+          <% link_classes = ["rubot-tabs__link"] %>
+          <% link_classes << "rubot-tabs__link--active" if @active_tab == key %>
+          <%= link_to label, rubot.run_path(@run.id, base_params.merge(tab: key)), class: link_classes.join(" ") %>
+        <% end %>
+      </nav>
+
+      <% case @active_tab %>
+      <% when "overview" %>
+        <section class="rubot-section-stack">
+          <%= render "output", run: @run %>
+
+          <% if @comparison_run %>
+            <%= render "rubot/shared/diff_block",
+                       title: "Replay Comparison",
+                       meta: "Comparing #{@comparison_run.id} to #{@run.id}",
+                       before_value: @comparison_run.output,
+                       after_value: @run.output %>
+          <% end %>
+        </section>
+      <% when "execution" %>
+        <%= render "execution", run: @run %>
+      <% when "trace" %>
+        <section class="rubot-section-stack">
+          <%= render "trace_viewer", run: @run %>
+        </section>
+      <% when "metrics" %>
+        <section class="rubot-section-stack">
+          <%= render "metrics", run: @run %>
+        </section>
+      <% end %>
+    </div>
+  </div>
 </section>

@@ -3,10 +3,11 @@
     <%= turbo_stream_from Rubot::LiveUpdates.runs_stream_name %>
   <% end %>
 
-  <header class="rubot-page__header">
-    <div>
-      <p class="rubot-eyebrow">Rubot</p>
+  <header class="rubot-page__hero">
+    <div class="rubot-page__title">
+      <p class="rubot-eyebrow">Execution</p>
       <h1>Runs</h1>
+      <p class="rubot-page__lede">Inspect live and historical workflow execution with status, timing, and fast links into full trace detail.</p>
     </div>
     <%= link_to "Approval Inbox", rubot.approvals_path, class: "rubot-link" %>
   </header>

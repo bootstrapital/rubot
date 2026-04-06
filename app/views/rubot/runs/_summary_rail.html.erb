@@ -1,0 +1,22 @@
+<aside class="rubot-detail-layout__rail">
+  <div class="rubot-detail-layout__rail-inner">
+    <%= render "overview", run: run %>
+
+    <article class="rubot-panel">
+      <h2>Trace</h2>
+      <dl class="rubot-kv">
+        <dt>Trace ID</dt>
+        <dd><%= run.trace_id %></dd>
+        <dt>Replay Of</dt>
+        <dd><%= run.replay_of_run_id || "original run" %></dd>
+      </dl>
+    </article>
+
+    <% if run.subject_label %>
+      <article class="rubot-panel">
+        <h2>Subject</h2>
+        <p><%= run.subject_label %></p>
+      </article>
+    <% end %>
+  </div>
+</aside>

@@ -17,6 +17,7 @@ module Rubot
 
       authorize_rubot_action!(:view, run:)
       @run = Presenters::RunPresenter.new(run)
+      @active_tab = normalize_tab(params[:tab])
       @comparison_run = build_comparison_run
       respond_to do |format|
         format.html
@@ -41,6 +42,13 @@ module Rubot
 
       comparison_run = rubot_store.find_run(comparison_id)
       comparison_run && Presenters::RunPresenter.new(comparison_run)
+    end
+
+    def normalize_tab(value)
+      candidate = value.to_s.presence || "overview"
+      return candidate if %w[overview execution trace metrics].include?(candidate)
+
+      "overview"
     end
   end
 end
