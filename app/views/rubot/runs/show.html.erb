@@ -27,7 +27,7 @@
     </div>
     <div class="rubot-actions">
       <details class="rubot-menu">
-        <summary class="rubot-menu__trigger" aria-label="Run actions">...</summary>
+        <summary class="rubot-menu__trigger" aria-label="Run actions">Actions</summary>
         <div class="rubot-menu__content">
           <%= link_to "All Runs", rubot.runs_path, class: "rubot-menu__item" %>
           <%= link_to "Open Execution View", rubot.run_path(@run.id, base_params.merge(tab: "execution")), class: "rubot-menu__item" %>
