@@ -129,6 +129,28 @@ module Rubot
       JSON.pretty_generate(value || {})
     end
 
+    def rubot_payload_summary(value)
+      case value
+      when Hash
+        keys = value.keys.map(&:to_s)
+        return "No structured fields" if keys.empty?
+
+        preview = keys.first(4).join(", ")
+        suffix = keys.length > 4 ? " +#{keys.length - 4} more" : ""
+        "#{keys.length} field#{'s' unless keys.length == 1}: #{preview}#{suffix}"
+      when Array
+        "#{value.length} item#{'s' unless value.length == 1}"
+      when NilClass
+        "No output recorded"
+      else
+        value.to_s.tr("\n", " ").slice(0, 140)
+      end
+    end
+
+    def rubot_step_anchor(step_name)
+      "run-step-#{step_name.to_s.parameterize(separator: '-')}"
+    end
+
     # Primitive UI Blocks
 
     def rubot_action_panel(title:, meta: nil, description: nil, actions: [], &block)

@@ -9,7 +9,7 @@ module Rubot
 
     layout "rubot/application"
     before_action :authorize_rubot_admin!
-    helper_method :rubot_navigation
+    helper_method :rubot_navigation, :rubot_breadcrumbs
 
     private
 
@@ -41,6 +41,30 @@ module Rubot
         { label: "Approvals", path: rubot.approvals_path, key: :approvals },
         { label: "Playground", path: rubot.playground_index_path, key: :playground }
       ]
+    end
+
+    def rubot_breadcrumbs
+      crumbs = [{ label: "Admin", path: rubot.root_path }]
+
+      case controller_name
+      when "dashboard"
+        crumbs << { label: "Dashboard", path: nil }
+      when "runs"
+        crumbs << { label: "Runs", path: rubot.runs_path }
+        crumbs << { label: (@run&.name || params[:id]), path: nil } if action_name == "show"
+      when "approvals"
+        crumbs << { label: "Approvals", path: nil }
+      when "playground"
+        crumbs << { label: "Playground", path: nil }
+      when "tool_calls"
+        crumbs << { label: "Runs", path: rubot.runs_path }
+        crumbs << { label: (@run&.name || params[:run_id]), path: rubot.run_path(params[:run_id]) }
+        crumbs << { label: (@tool_call&.short_name || "Tool Call"), path: nil }
+      else
+        crumbs << { label: controller_name.to_s.humanize, path: nil }
+      end
+
+      crumbs
     end
   end
 end

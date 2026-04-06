@@ -4,11 +4,16 @@
   <% if run.step_groups.any? %>
     <div class="rubot-card-list">
       <% run.step_groups.each do |step| %>
-        <section class="rubot-card">
+        <section class="rubot-card" id="<%= rubot_step_anchor(step[:name]) %>">
           <div class="rubot-card__header">
             <div>
               <h3><%= step[:name] %></h3>
-              <p class="rubot-card__meta"><%= step[:events].size %> event<%= "s" unless step[:events].size == 1 %></p>
+              <p class="rubot-card__meta">
+                <%= step[:events].size %> event<%= "s" unless step[:events].size == 1 %>
+                <% if step[:tool_calls].any? %>
+                  · <%= step[:tool_calls].size %> tool call<%= "s" unless step[:tool_calls].size == 1 %>
+                <% end %>
+              </p>
             </div>
             <%= rubot_status_badge(step[:status]) %>
           </div>
@@ -21,16 +26,35 @@
           <% end %>
 
           <% if step[:result] %>
-            <pre><%= rubot_json(step[:result]) %></pre>
+            <details class="rubot-disclosure">
+              <summary>
+                <span class="rubot-disclosure__summary">
+                  <span>Result</span>
+                  <span class="rubot-card__meta"><%= rubot_payload_summary(step[:result]) %></span>
+                </span>
+              </summary>
+              <div class="rubot-disclosure__content">
+                <pre><%= rubot_json(step[:result]) %></pre>
+              </div>
+            </details>
           <% end %>
 
           <% if step[:tool_calls].any? %>
-            <p class="rubot-card__meta">
-              Tools:
-              <% step[:tool_calls].each do |tool_call| %>
-                <%= link_to tool_call.short_name, rubot.run_tool_call_path(run.id, tool_call.id), class: "rubot-link" %>
-              <% end %>
-            </p>
+            <details class="rubot-disclosure">
+              <summary>
+                <span class="rubot-disclosure__summary">
+                  <span>Tools</span>
+                  <span class="rubot-card__meta"><%= step[:tool_calls].map(&:short_name).join(", ") %></span>
+                </span>
+              </summary>
+              <div class="rubot-disclosure__content">
+                <div class="rubot-badge-row">
+                  <% step[:tool_calls].each do |tool_call| %>
+                    <%= link_to tool_call.short_name, rubot.run_tool_call_path(run.id, tool_call.id), class: "rubot-link" %>
+                  <% end %>
+                </div>
+              </div>
+            </details>
           <% end %>
         </section>
       <% end %>

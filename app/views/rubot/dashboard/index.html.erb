@@ -1,9 +1,14 @@
 <section class="rubot-page">
-  <header class="rubot-page__header">
-    <div>
+  <header class="rubot-page__hero">
+    <div class="rubot-page__title">
       <p class="rubot-eyebrow">Rubot Admin</p>
       <h1>Dashboard</h1>
-      <p class="rubot-shell__caption">Shared operator shell, presenter contracts, and engine-first admin surface.</p>
+      <p class="rubot-page__lede">A console-first overview of workflow traffic, approval pressure, tool reliability, and model spend across the current workspace.</p>
+      <div class="rubot-page__meta">
+        <span class="rubot-page__meta-chip">Runs and approvals</span>
+        <span class="rubot-page__meta-chip">Trace-first debugging</span>
+        <span class="rubot-page__meta-chip">Render-inspired dark console</span>
+      </div>
     </div>
   </header>
 
@@ -20,9 +25,11 @@
     <div class="rubot-page__header">
       <h2>Platform Metrics</h2>
     </div>
-    <p class="rubot-card__meta">Average duration: <%= @dashboard[:summary][:average_duration_seconds] || "n/a" %>s</p>
-    <p class="rubot-card__meta">Average approval wait: <%= @dashboard[:summary][:average_approval_wait_seconds] || "n/a" %>s</p>
-    <p class="rubot-card__meta">Estimated total model cost: $<%= format("%.6f", @dashboard[:summary][:total_model_cost]) %></p>
+    <div class="rubot-page__meta">
+      <span class="rubot-page__meta-chip">Average duration: <%= @dashboard[:summary][:average_duration_seconds] || "n/a" %>s</span>
+      <span class="rubot-page__meta-chip">Approval wait: <%= @dashboard[:summary][:average_approval_wait_seconds] || "n/a" %>s</span>
+      <span class="rubot-page__meta-chip">Estimated model cost: $<%= format("%.6f", @dashboard[:summary][:total_model_cost]) %></span>
+    </div>
   </article>
 
   <article class="rubot-panel">

@@ -1,0 +1,30 @@
+<section class="rubot-section-stack">
+  <article class="rubot-panel">
+    <div class="rubot-page__header">
+      <h2>Execution View</h2>
+      <div class="rubot-page__meta">
+        <span class="rubot-page__meta-chip"><%= run.step_groups.length %> step<%= "s" unless run.step_groups.length == 1 %></span>
+        <span class="rubot-page__meta-chip"><%= run.tool_calls.length %> tool call<%= "s" unless run.tool_calls.length == 1 %></span>
+        <span class="rubot-page__meta-chip"><%= run.events.length %> event<%= "s" unless run.events.length == 1 %></span>
+      </div>
+    </div>
+
+    <nav class="rubot-subtabs" aria-label="Execution sections">
+      <a href="#run-steps" class="rubot-subtabs__link">Steps</a>
+      <a href="#run-tool-calls" class="rubot-subtabs__link">Tool Calls</a>
+      <a href="#run-timeline" class="rubot-subtabs__link">Timeline</a>
+    </nav>
+  </article>
+
+  <div id="run-steps">
+    <%= render "steps", run: run %>
+  </div>
+
+  <div id="run-tool-calls">
+    <%= render "tool_calls", run: run %>
+  </div>
+
+  <div id="run-timeline">
+    <%= render "timeline", run: run %>
+  </div>
+</section>

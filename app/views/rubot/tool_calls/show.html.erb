@@ -1,11 +1,15 @@
 <section class="rubot-page">
-  <header class="rubot-page__header">
-    <div>
+  <header class="rubot-page__hero">
+    <div class="rubot-page__title">
       <p class="rubot-eyebrow">Tool Call</p>
       <h1><%= @tool_call.short_name %></h1>
+      <div class="rubot-page__meta">
+        <span class="rubot-page__meta-chip">Step: <%= @tool_call.step_name || "unscoped" %></span>
+        <span class="rubot-page__meta-chip">Status: <%= @tool_call.status %></span>
+      </div>
     </div>
     <div class="rubot-actions">
-      <%= link_to "Back to Run", rubot.run_path(@run.id), class: "rubot-link" %>
+      <%= link_to "Back to Run", rubot.run_path(@run.id), class: "rubot-button rubot-button--secondary" %>
       <%= link_to "Approval Inbox", rubot.approvals_path, class: "rubot-link" %>
     </div>
   </header>

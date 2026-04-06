@@ -24,6 +24,30 @@
               <%= rubot_warning_badges(tool_call.warnings) %>
             </div>
           <% end %>
+
+          <details class="rubot-disclosure">
+            <summary>
+              <span class="rubot-disclosure__summary">
+                <span>Input</span>
+                <span class="rubot-card__meta"><%= rubot_payload_summary(tool_call.input) %></span>
+              </span>
+            </summary>
+            <div class="rubot-disclosure__content">
+              <pre><%= rubot_json(tool_call.input) %></pre>
+            </div>
+          </details>
+
+          <details class="rubot-disclosure">
+            <summary>
+              <span class="rubot-disclosure__summary">
+                <span>Output</span>
+                <span class="rubot-card__meta"><%= rubot_payload_summary(tool_call.output) %></span>
+              </span>
+            </summary>
+            <div class="rubot-disclosure__content">
+              <pre><%= rubot_json(tool_call.output) %></pre>
+            </div>
+          </details>
         </section>
       <% end %>
     </div>

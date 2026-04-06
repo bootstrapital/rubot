@@ -3,10 +3,11 @@
     <%= turbo_stream_from Rubot::LiveUpdates.approvals_stream_name %>
   <% end %>
 
-  <header class="rubot-page__header">
-    <div>
-      <p class="rubot-eyebrow">Rubot</p>
+  <header class="rubot-page__hero">
+    <div class="rubot-page__title">
+      <p class="rubot-eyebrow">Approvals</p>
       <h1>Approval Inbox</h1>
+      <p class="rubot-page__lede">Review workflow gates that require operator confirmation before a run can continue.</p>
     </div>
     <%= link_to "All Runs", rubot.runs_path, class: "rubot-link" %>
   </header>

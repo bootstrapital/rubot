@@ -12,7 +12,7 @@
       <div class="rubot-shell__brand">
         <p class="rubot-shell__eyebrow">Rubot</p>
         <h1>Admin</h1>
-        <p class="rubot-shell__caption">Hybrid engine surface for operations, traces, and approvals.</p>
+        <p class="rubot-shell__caption">Runs, approvals, replay, traces, and developer diagnostics.</p>
       </div>
 
       <nav class="rubot-shell__nav">
@@ -23,6 +23,22 @@
     </aside>
 
     <main class="rubot-shell__main">
+      <header class="rubot-topbar">
+        <div class="rubot-topbar__crumbs">
+          <% rubot_breadcrumbs.each_with_index do |crumb, index| %>
+            <% if crumb[:path].present? && index < rubot_breadcrumbs.length - 1 %>
+              <%= link_to crumb[:label], crumb[:path] %>
+            <% else %>
+              <strong><%= crumb[:label] %></strong>
+            <% end %>
+
+            <% unless index == rubot_breadcrumbs.length - 1 %>
+              <span>/</span>
+            <% end %>
+          <% end %>
+        </div>
+      </header>
+
       <%= yield %>
     </main>
   </body>
