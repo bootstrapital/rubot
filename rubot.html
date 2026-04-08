@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Rubot</title>
+        <meta
+            name="description"
+            content="Rubot is workflow infrastructure for building governed operational software around inference in Ruby and Rails."
+        />
+        <style>
+            :root {
+                --bg: #f6f5f1;
+                --panel: #fffefb;
+                --ink: #121212;
+                --muted: #545454;
+                --line: #d9d6cf;
+                --accent: #1d3b61;
+                --max: 760px;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                background: var(--bg);
+                color: var(--ink);
+                font-family:
+                    "Iowan Old Style", "Palatino Linotype", "Book Antiqua",
+                    Georgia, serif;
+            }
+
+            a {
+                color: var(--accent);
+            }
+
+            a:hover,
+            a:focus-visible {
+                color: #112642;
+            }
+
+            .topbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 10;
+                background: rgba(246, 245, 241, 0.94);
+                border-bottom: 1px solid var(--line);
+                backdrop-filter: blur(8px);
+            }
+
+            .topbar-inner {
+                width: min(calc(100% - 2rem), var(--max));
+                margin: 0 auto;
+                min-height: 56px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                font-family: "Helvetica Neue", Arial, sans-serif;
+            }
+
+            .brand,
+            .toplink {
+                font-size: 0.82rem;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                text-decoration: none;
+            }
+
+            .brand {
+                color: var(--ink);
+                font-weight: 700;
+            }
+
+            .toplink {
+                color: var(--muted);
+            }
+
+            .page {
+                width: min(calc(100% - 2rem), var(--max));
+                margin: 0 auto;
+                padding: 5.5rem 0 4rem;
+            }
+
+            .eyebrow,
+            .caption {
+                margin: 0 0 0.8rem;
+                color: var(--muted);
+                font-family: "Helvetica Neue", Arial, sans-serif;
+                font-size: 0.76rem;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+            }
+
+            header {
+                margin-bottom: 2.5rem;
+            }
+
+            h1,
+            h2,
+            h3 {
+                margin: 0;
+                font-weight: 600;
+                line-height: 1.04;
+                letter-spacing: -0.03em;
+            }
+
+            h1 {
+                font-size: clamp(3rem, 8vw, 5.6rem);
+                max-width: 10ch;
+                margin-bottom: 1rem;
+            }
+
+            h2 {
+                font-size: clamp(1.8rem, 3vw, 2.7rem);
+                margin-bottom: 0.9rem;
+            }
+
+            h3 {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+
+            p,
+            li {
+                color: var(--muted);
+                font-size: 1.08rem;
+                line-height: 1.78;
+            }
+
+            .lead {
+                color: var(--ink);
+                font-size: 1.24rem;
+            }
+
+            section {
+                margin-top: 2.4rem;
+            }
+
+            section > p + p,
+            section > ul,
+            section > ol,
+            .diagram + p,
+            .subsection + .subsection {
+                margin-top: 1rem;
+            }
+
+            ul {
+                padding-left: 1.2rem;
+            }
+
+            .card,
+            .primitive {
+                border: 1px solid var(--line);
+                background: var(--panel);
+            }
+
+            .card {
+                padding: 1.3rem;
+            }
+
+            .primitive-list {
+                display: grid;
+                gap: 0.8rem;
+                margin-top: 1rem;
+            }
+
+            .primitive {
+                padding: 1rem 1.05rem;
+            }
+
+            code {
+                font-family:
+                    "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+                    monospace;
+                font-size: 0.94em;
+            }
+
+            footer {
+                margin-top: 3rem;
+                padding-top: 1rem;
+                border-top: 1px solid var(--line);
+                font-family: "Helvetica Neue", Arial, sans-serif;
+                font-size: 0.9rem;
+                color: var(--muted);
+            }
+
+            @media (max-width: 640px) {
+                .page {
+                    width: min(calc(100% - 1.25rem), var(--max));
+                }
+
+                .topbar-inner {
+                    width: min(calc(100% - 1.25rem), var(--max));
+                }
+
+                p,
+                li {
+                    font-size: 1rem;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="topbar">
+            <div class="topbar-inner">
+                <a class="brand" href="#">RUBOT</a>
+                <a class="toplink" href="https://github.com/bootstrapital/rubot"
+                    >GitHub</a
+                >
+            </div>
+        </div>
+
+        <main class="page">
+            <header>
+                <p class="eyebrow">Rubot</p>
+                <h1>Workflow Engineering For Real Business Processes.</h1>
+                <p class="lead">
+                    Rubot is a code-first framework for building governed
+                    workflows where models can help with judgment, but the
+                    surrounding system still has explicit state, procedure,
+                    approvals, and long-term ownership.
+                </p>
+            </header>
+
+            <section>
+                <h2>Rubot as an ops backend</h2>
+                <p>
+                    There is a growing class of software that sits between a
+                    simple script and a fully custom product surface. It is
+                    usually operational in nature: review flows, routing,
+                    approvals, intake, case handling, compliance checks,
+                    escalations, or financial procedures. This work is often too
+                    important to leave in spreadsheets, ticket queues, and ad
+                    hoc scripts, but too specific to receive the same treatment
+                    as a core customer-facing feature.
+                </p>
+                <p>
+                    Large models make this category more interesting, but they
+                    do not remove the hard part. The hard part is not generating
+                    an answer. The hard part is building a system that can
+                    gather facts, apply judgment, stop for review, resume later,
+                    take bounded action, and leave behind a durable explanation
+                    of what happened.
+                </p>
+                <p>
+                    Think of Rubot as an ops backend for this kind of work. A
+                    product UI can submit work into it. An API can submit work
+                    into it. A webhook or scheduled process can do the same. In
+                    each case, the submission becomes a durable operational run
+                    that can gather facts, apply judgment, branch under policy,
+                    pause for approval, and then take bounded action.
+                </p>
+                <p>
+                    The closest analogy is probably dbt. dbt did not invent SQL
+                    or the warehouse. It gave analytics engineering a shaped
+                    layer for turning raw data work into something more durable,
+                    reviewable, and owned. Rubot is aiming at a similar role for
+                    operational systems. It does not replace the host
+                    application, background jobs, or external APIs. It provides
+                    a structured runtime where incoming requests, signals, and
+                    cases can be turned into governed procedures with explicit
+                    actions, judgment boundaries, approvals, and history.
+                </p>
+                <p>
+                    That is the problem Rubot is trying to address. It treats
+                    inference as one component inside a broader operational
+                    system rather than the category itself.
+                </p>
+            </section>
+
+            <section>
+                <h2>Code-first is pragmatic</h2>
+                <p>
+                    Rubot is code-first in a very specific sense. It is not a
+                    prompt layer, a hosted workflow builder, or a visual
+                    automation tool. It is a framework for writing operational
+                    capabilities directly in application code, with enough
+                    structure that the resulting system can still be reviewed,
+                    governed, and maintained over time.
+                </p>
+                <p>
+                    This approach is more practical now because code generation
+                    has lowered the cost of bespoke workflow software. Teams can
+                    describe a process and have large parts of the
+                    implementation drafted for them. That makes code-first
+                    systems much more approachable than they were even a few
+                    years ago.
+                </p>
+                <p>
+                    But the answer is not to abandon code. Business processes
+                    become complex in ways that are hard to express cleanly in
+                    prompts or GUIs alone. They involve branching logic,
+                    exception handling, policy boundaries, integrations, state
+                    transitions, and human review. Code is still the most
+                    expressive and malleable medium for that level of
+                    complexity, as long as the framework gives it a durable
+                    shape.
+                </p>
+                <p>
+                    In other words, code generation makes bespoke workflow
+                    software easier to produce. A code-first framework is what
+                    makes that software easier to keep.
+                </p>
+            </section>
+
+            <section>
+                <h2>Workflow Engineering</h2>
+                <p>
+                    A useful way to think about this is as workflow engineering:
+                    the practice of building operational software that
+                    coordinates systems, humans, policy, state, and AI where
+                    useful. The unit of work is an operational capability, not a
+                    markdown page or prompt.
+                </p>
+                <p>
+                    In that sense, the question is not whether a model can
+                    classify, summarize, recommend, or draft. Models can often
+                    do those things well enough to be useful. The question is
+                    whether the resulting workflow remains structured enough to
+                    trust, review, govern, and maintain once it begins touching
+                    real business processes.
+                </p>
+                <p>
+                    The dbt analogy is useful here for another reason. Analytics
+                    Engineering helped create a path for analytically minded
+                    people to grow into a more code-native discipline without
+                    severing their connection to the business problems they
+                    understood best. Workflow Engineering creates a similar
+                    opportunity for strong operations practitioners. The people
+                    closest to the process often understand the real failure
+                    modes, policy edges, and handoffs better than anyone else.
+                    As software generation gets cheaper, there is an opportunity
+                    to help that talent move up the stack into more explicit
+                    system design and workflow ownership.
+                </p>
+                <p>
+                    Better models make software generation cheaper. They do not
+                    remove the need for architecture, approvals, replay,
+                    regression control, and clear boundaries around side
+                    effects.
+                </p>
+            </section>
+
+            <section>
+                <h2>Why Ruby and Rails</h2>
+                <p>
+                    Ruby is a good place for this because the framework can stay
+                    powerful without becoming unreadable. Workflow code still
+                    needs to look like application code that a team can
+                    understand. If the target architecture is legible, generated
+                    code has a much better chance of being worth keeping.
+                </p>
+                <p>
+                    Rails matters because real operational systems usually need
+                    persistence, jobs, authentication, administration, and
+                    integration with the rest of an application. That makes
+                    Rails a strong host environment for governed workflow
+                    software rather than just a place to mount a demo.
+                </p>
+            </section>
+
+            <section>
+                <h2>The primitives</h2>
+                <p>
+                    Rubot introduces a small set of primitives intended to keep
+                    these systems legible.
+                </p>
+
+                <div class="primitive-list">
+                    <article class="primitive">
+                        <h3><code>Tool</code></h3>
+                        <p>
+                            A tool is an explicit action boundary. It loads
+                            facts, calls an external system, or performs a
+                            concrete side effect.
+                        </p>
+                    </article>
+
+                    <article class="primitive">
+                        <h3><code>Agent</code></h3>
+                        <p>
+                            An agent is a structured judgment boundary. This is
+                            where a model is useful for classification,
+                            extraction, summarization, or recommendation.
+                        </p>
+                    </article>
+
+                    <article class="primitive">
+                        <h3><code>Workflow</code></h3>
+                        <p>
+                            A workflow defines procedure: ordered steps,
+                            branching, approval points, resumability, and state
+                            transitions.
+                        </p>
+                    </article>
+
+                    <article class="primitive">
+                        <h3><code>Operation</code></h3>
+                        <p>
+                            An operation is the capability boundary. It is the
+                            unit a host application launches when a piece of
+                            operational work enters the system.
+                        </p>
+                    </article>
+
+                    <article class="primitive">
+                        <h3><code>Run</code></h3>
+                        <p>
+                            A run is the durable execution record: events,
+                            outputs, checkpoints, approvals, replay
+                            relationships, and trace history.
+                        </p>
+                    </article>
+                </div>
+
+                <p>
+                    The point of these boundaries is not abstraction for its own
+                    sake. The point is to stop a workflow from collapsing into a
+                    single opaque loop where prompt text, control flow, policy,
+                    and side effects are all mixed together.
+                </p>
+            </section>
+
+            <section>
+                <h2>What this enables</h2>
+                <p>
+                    The practical outcome is semi-autonomous software that can
+                    operate with clear boundaries. A workflow can proceed on its
+                    own where policy allows, stop where review is required, and
+                    remain understandable to the humans who own it.
+                </p>
+                <p>
+                    That makes this a good fit for systems where trust,
+                    reviewability, and maintainability matter as much as model
+                    capability itself. The interesting question is not whether a
+                    model can act. It is whether the resulting workflow still
+                    feels like real software.
+                </p>
+            </section>
+
+            <footer>
+                Rubot is workflow infrastructure for governed operational
+                software.
+            </footer>
+        </main>
+    </body>
+</html>
