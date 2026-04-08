@@ -242,7 +242,7 @@ module Rubot
         return tool unless tool.is_a?(Symbol)
 
         owner = rubot_operation_owner
-        return tool unless owner&.respond_to?(:tool)
+        return tool unless owner.respond_to?(:tool)
 
         owner.tool(tool) || raise(ExecutionError, "#{name} could not resolve tool #{tool} from #{owner.name}")
       end
@@ -251,7 +251,7 @@ module Rubot
         return agent unless agent.is_a?(Symbol)
 
         owner = rubot_operation_owner
-        return agent unless owner&.respond_to?(:agent)
+        return agent unless owner.respond_to?(:agent)
 
         owner.agent(agent) || raise(ExecutionError, "#{name} could not resolve agent #{agent} from #{owner.name}")
       end

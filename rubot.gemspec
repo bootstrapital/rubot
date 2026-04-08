@@ -35,6 +35,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "activejob"
   spec.add_development_dependency "activerecord"
   spec.add_development_dependency "rake"
+  spec.add_development_dependency "rubocop", ">= 1.81"
+  spec.add_development_dependency "rubocop-performance", ">= 1.24"
   spec.add_development_dependency "simplecov"
   spec.add_development_dependency "sqlite3"
   spec.add_development_dependency "railties"

@@ -51,9 +51,7 @@ module Rubot
         return unless config.key?(:tags)
 
         tags = config[:tags]
-        unless tags.is_a?(Array) && tags.all? { |tag| tag.is_a?(String) }
-          raise Rubot::ValidationError, "Rubot agent config tags must be an array of strings"
-        end
+        raise Rubot::ValidationError, "Rubot agent config tags must be an array of strings" unless tags.is_a?(Array) && tags.all? { |tag| tag.is_a?(String) }
 
         config[:tags] = tags.dup.freeze
       end

@@ -202,9 +202,7 @@ module Rubot
       approvals.each do |approval|
         next unless approval.pending?
 
-        if approval.overdue?(time)
-          add_event(Event.new(type: "approval.overdue", step_name: approval.step_name, payload: approval.to_h))
-        end
+        add_event(Event.new(type: "approval.overdue", step_name: approval.step_name, payload: approval.to_h)) if approval.overdue?(time)
 
         next unless approval.expired?(time)
 

@@ -1,0 +1,49 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.1
+  SuggestExtensions: false
+  DisabledByDefault: true
+  Exclude:
+    - "sample_app/**/*"
+    - "vendor/**/*"
+    - "tmp/**/*"
+
+plugins:
+  - rubocop-performance
+
+# Keep the lint surface intentionally small.
+# The goal is to reinforce the core Rubot idioms, not force a large
+# formatting migration across the repo.
+
+Lint/RedundantSafeNavigation:
+  Enabled: true
+
+Style/CollectionCompact:
+  Enabled: true
+
+Style/DoubleNegation:
+  Enabled: true
+
+Style/GuardClause:
+  Enabled: true
+
+Style/IfUnlessModifier:
+  Enabled: true
+
+Style/NegatedIf:
+  Enabled: true
+
+Style/NegatedUnless:
+  Enabled: true
+
+Style/OrAssignment:
+  Enabled: true
+
+Style/RedundantReturn:
+  Enabled: true
+
+Style/SafeNavigation:
+  Enabled: true
+
+Style/SymbolProc:
+  Enabled: true

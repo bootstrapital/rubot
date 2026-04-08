@@ -67,4 +67,12 @@ rails generate rubot:install
 rails db:migrate
 ```
 
+## Contributing
+
+Rubot aims to keep the library idiomatic and readable. See the [Ruby Style Guide](./docs/ruby_style.md).
+
+```bash
+bundle exec rubocop lib
+```
+
 [View the Quickstart Guide](./docs/quickstart.md) | [Concepts](./docs/concepts.md) | [Architecture](./docs/architecture.md)
