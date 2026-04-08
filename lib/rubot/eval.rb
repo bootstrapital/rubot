@@ -152,17 +152,17 @@ module Rubot
 
     def run(fixtures: nil, tags: nil)
       raise Rubot::ExecutionError, "#{self.class.name} must define a target" unless self.class.target
-      
+
       selected_fixtures = self.class.fixtures
       if fixtures
         fixture_names = Array(fixtures).map(&:to_sym)
-        selected_fixtures = selected_fixtures.select { |f| fixture_names.include?(f.name) }
+        selected_fixtures = selected_fixtures.select { |fixture| fixture_names.include?(fixture.name) }
       end
 
       if tags
         tags = Array(tags).map(&:to_sym)
-        selected_fixtures = selected_fixtures.select do |f|
-          f_tags = Array(f.metadata[:tags]).map(&:to_sym)
+        selected_fixtures = selected_fixtures.select do |fixture|
+          f_tags = Array(fixture.metadata[:tags]).map(&:to_sym)
           (f_tags & tags).any?
         end
       end
@@ -251,9 +251,9 @@ module Rubot
       self.class.thresholds.filter_map do |threshold|
         score = scores[threshold.score_name]
         next "missing score #{threshold.score_name}" if score.nil?
-        next "#{threshold.score_name} was #{score}, expected #{threshold.equals}" if !threshold.equals.nil? && score != threshold.equals
-        next "#{threshold.score_name} was #{score}, expected >= #{threshold.min}" if !threshold.min.nil? && score < threshold.min
-        next "#{threshold.score_name} was #{score}, expected <= #{threshold.max}" if !threshold.max.nil? && score > threshold.max
+        next "#{threshold.score_name} was #{score}, expected #{threshold.equals}" unless threshold.equals.nil? || score == threshold.equals
+        next "#{threshold.score_name} was #{score}, expected >= #{threshold.min}" unless threshold.min.nil? || score >= threshold.min
+        next "#{threshold.score_name} was #{score}, expected <= #{threshold.max}" unless threshold.max.nil? || score <= threshold.max
 
         nil
       end

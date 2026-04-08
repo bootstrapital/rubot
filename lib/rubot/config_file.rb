@@ -11,7 +11,8 @@ module Rubot
       def load(path:, environment: nil)
         return {} unless File.exist?(path)
 
-        raw = YAML.safe_load(File.read(path), permitted_classes: [], aliases: false) || {}
+        raw = YAML.safe_load(File.read(path), permitted_classes: [], aliases: false)
+        raw ||= {}
         raise Rubot::ValidationError, "Rubot config must be a YAML mapping" unless raw.is_a?(Hash)
 
         normalized = deep_symbolize(raw)

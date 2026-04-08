@@ -105,7 +105,7 @@ module Rubot
       private
 
       def all_run_presenters
-        Rubot.store.all_runs.map { |run| Presenters::RunPresenter.new(run) }
+        Rubot.store.all_runs.map(&Presenters::RunPresenter.method(:new))
       end
 
       def pending_approval_presenters

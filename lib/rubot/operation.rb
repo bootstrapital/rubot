@@ -9,17 +9,22 @@ module Rubot
     class << self
       def inherited(subclass)
         super
+        operation_workflows = rubot_operation_workflows.dup
+        operation_agents = rubot_operation_agents.dup
+        operation_tools = rubot_operation_tools.dup
+        operation_memory_config = @rubot_operation_memory_config&.dup || Rubot::Memory::Config.new
+
         subclass.instance_variable_set(:@rubot_operation_workflow, @rubot_operation_workflow)
         subclass.instance_variable_set(:@rubot_operation_agent, @rubot_operation_agent)
-        subclass.instance_variable_set(:@rubot_operation_workflows, (rubot_operation_workflows || {}).dup)
-        subclass.instance_variable_set(:@rubot_operation_agents, (rubot_operation_agents || {}).dup)
+        subclass.instance_variable_set(:@rubot_operation_workflows, operation_workflows)
+        subclass.instance_variable_set(:@rubot_operation_agents, operation_agents)
         subclass.instance_variable_set(:@rubot_operation_default_workflow_key, @rubot_operation_default_workflow_key)
         subclass.instance_variable_set(:@rubot_operation_default_agent_key, @rubot_operation_default_agent_key)
-        subclass.instance_variable_set(:@rubot_operation_tools, (rubot_operation_tools || {}).dup)
+        subclass.instance_variable_set(:@rubot_operation_tools, operation_tools)
         subclass.instance_variable_set(:@rubot_operation_triggers, rubot_operation_triggers.dup)
         subclass.instance_variable_set(:@rubot_operation_entrypoints, rubot_operation_entrypoints.dup)
         subclass.instance_variable_set(:@rubot_operation_ui, @rubot_operation_ui)
-        subclass.instance_variable_set(:@rubot_operation_memory_config, (@rubot_operation_memory_config&.dup || Rubot::Memory::Config.new))
+        subclass.instance_variable_set(:@rubot_operation_memory_config, operation_memory_config)
       end
 
       def workflow(identifier = nil, klass = nil, name: nil, default: false, &block)
@@ -236,7 +241,7 @@ module Rubot
       end
 
       def apply_operation_owner(component, superclass)
-        return unless superclass == Rubot::Workflow || superclass == Rubot::Agent
+        return unless [Rubot::Workflow, Rubot::Agent].include?(superclass)
 
         component.instance_variable_set(:@rubot_operation_owner, self)
       end

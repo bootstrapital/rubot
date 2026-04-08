@@ -25,13 +25,19 @@ module Rubot
           raise Rubot::ExecutionError, "Provide file_path or content" if blank?(file_path) && blank?(content)
 
           body =
-            if !blank?(file_path)
+            unless blank?(file_path)
               File.read(file_path)
             else
               content.to_s
             end
 
-          resolved_name = file_name || (!blank?(file_path) ? File.basename(file_path) : "inline.txt")
+          resolved_name =
+            file_name ||
+            if blank?(file_path)
+              "inline.txt"
+            else
+              File.basename(file_path)
+            end
           resolved_content_type = content_type || infer_content_type(resolved_name)
 
           {

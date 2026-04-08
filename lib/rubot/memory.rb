@@ -30,7 +30,8 @@ module Rubot
 
     class ContextBuilder
       def initialize(config)
-        @config = config || Config.new
+        config ||= Config.new
+        @config = config
       end
 
       def build(messages:, run:, agent_class:, turn:, input:, context:)

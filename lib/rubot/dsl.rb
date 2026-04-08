@@ -52,9 +52,9 @@ module Rubot
       @rubot_tools ||= []
       if block
         @rubot_dynamic_tools = block
-      elsif tool_classes.length == 1 && tool_classes.first.is_a?(Proc)
+      elsif tool_classes.one? && tool_classes.first.is_a?(Proc)
         @rubot_dynamic_tools = tool_classes.first
-      elsif !tool_classes.empty?
+      elsif tool_classes.any?
         @rubot_tools.concat(tool_classes)
       end
       @rubot_tools

@@ -80,10 +80,12 @@ module Rubot
 
       def merge(*sources)
         normalized_sources = sources.map { |source| normalize_merge_source(source) }
+        descriptions = normalized_sources.map { |source| source[:description] }
+        metadata_sources = normalized_sources.filter_map { |source| source[:metadata] }
 
         InputMapping.new(
-          "merge(#{normalized_sources.map { |source| source[:description] }.join(', ')})",
-          metadata: { kind: :merge, sources: normalized_sources.map { |source| source[:metadata] }.compact }
+          "merge(#{descriptions.join(', ')})",
+          metadata: { kind: :merge, sources: metadata_sources }
         ) do |input, state, context|
           normalized_sources.each_with_object({}) do |source, memo|
             value = source[:resolver].call(input, state, context)
@@ -321,7 +323,7 @@ module Rubot
     end
 
     def handle_jump(target)
-      index = self.class.rubot_steps.find_index { |s| s.name == target }
+      index = self.class.rubot_steps.find_index { |step| step.name == target }
       raise ExecutionError, "Jump target #{target} not found" unless index
 
       clear_checkpoints_from(index)
@@ -329,7 +331,7 @@ module Rubot
     end
 
     def handle_skip(target)
-      index = self.class.rubot_steps.find_index { |s| s.name == target }
+      index = self.class.rubot_steps.find_index { |step| step.name == target }
       raise ExecutionError, "Skip target #{target} not found" unless index
 
       clear_checkpoints_from(index)

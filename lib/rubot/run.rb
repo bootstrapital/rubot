@@ -13,12 +13,16 @@ module Rubot
                 :subject_ref, :cancellation_requested_at, :canceled_at
 
     def initialize(name:, kind:, input:, subject: nil, subject_ref: nil, context: {}, id: nil, status: :queued, state: {}, output: nil, error: nil, current_step: nil, started_at: nil, completed_at: nil, events: [], approvals: [], tool_calls: [], trace_id: nil, replay_of_run_id: nil, cancellation_requested_at: nil, canceled_at: nil, execution_claim_token: nil, execution_claimed_at: nil, persist: true)
-      @id = id || Rubot.configuration.id_generator.call
+      id ||= Rubot.configuration.id_generator.call
+      subject_ref ||= Rubot::Subject.reference(subject)
+      trace_id ||= id
+
+      @id = id
       @name = name
       @kind = kind
       @input = input
       @subject = subject
-      @subject_ref = subject_ref || Rubot::Subject.reference(subject)
+      @subject_ref = subject_ref
       @context = context
       @state = state
       @events = events
@@ -30,7 +34,7 @@ module Rubot
       @current_step = current_step
       @started_at = started_at
       @completed_at = completed_at
-      @trace_id = trace_id || @id
+      @trace_id = trace_id
       @replay_of_run_id = replay_of_run_id
       @cancellation_requested_at = cancellation_requested_at
       @canceled_at = canceled_at
@@ -64,7 +68,7 @@ module Rubot
     end
 
     def cancel_requested?
-      !cancellation_requested_at.nil?
+      !!cancellation_requested_at
     end
 
     def terminal?

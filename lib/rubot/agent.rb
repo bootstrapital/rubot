@@ -323,7 +323,7 @@ module Rubot
         end
       end
 
-      resolved
+      resolved.uniq
     end
 
     def resolve_runtime_value(value, resolution_context)
