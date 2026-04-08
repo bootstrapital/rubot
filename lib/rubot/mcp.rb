@@ -2,6 +2,46 @@
 
 module Rubot
   module MCP
+    class << self
+      def discover(client, namespace: "MCP")
+        ToolRegistry.new(client: client, namespace: namespace).discover
+      end
+
+      def call_tool(client, name, arguments = {})
+        result = normalize_keys(client.call_tool(name, arguments))
+
+        if result.is_a?(Hash) && result[:isError]
+          raise MCPError.new(
+            "MCP tool error: #{extract_error_message(result)}",
+            details: { name: name, arguments: arguments, result: result }
+          )
+        end
+
+        result
+      rescue StandardError => e
+        raise e if e.is_a?(MCPError)
+        raise MCPError.new(e.message, details: { name: name, arguments: arguments, original_exception: e.class.name })
+      end
+
+      private
+
+      def normalize_keys(value)
+        case value
+        when Hash
+          Rubot::HashUtils.symbolize(value)
+        when Array
+          value.map { |item| normalize_keys(item) }
+        else
+          value
+        end
+      end
+
+      def extract_error_message(result)
+        content = Array(result[:content]).find { |c| c[:type] == "text" }
+        content ? content[:text] : "Unknown remote error"
+      end
+    end
+
     class Client
       def list_tools
         raise NotImplementedError, "#{self.class.name} must implement #list_tools"
@@ -37,7 +77,7 @@ module Rubot
       end
 
       def call(**input)
-        self.class.mcp_client.call_tool(self.class.mcp_tool_name, input)
+        Rubot::MCP.call_tool(self.class.mcp_client, self.class.mcp_tool_name, input)
       end
     end
 

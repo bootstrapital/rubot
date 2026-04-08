@@ -5,8 +5,9 @@ require_relative "test_helper"
 class FakeMCPClient < Rubot::MCP::Client
   attr_reader :calls
 
-  def initialize
+  def initialize(string_keys: false)
     @calls = []
+    @string_keys = string_keys
   end
 
   def list_tools
@@ -35,7 +36,25 @@ class FakeMCPClient < Rubot::MCP::Client
 
   def call_tool(name, arguments = {})
     @calls << { name:, arguments: }
-    { ticket_id: arguments[:ticket_id], status: "open" }
+    if arguments[:is_error]
+      if @string_keys
+        {
+          "content" => [{ "type" => "text", "text" => "Remote Error Message" }],
+          "isError" => true
+        }
+      else
+        {
+          content: [{ type: "text", text: "Remote Error Message" }],
+          isError: true
+        }
+      end
+    else
+      if @string_keys
+        { "ticket_id" => arguments[:ticket_id], "status" => "open" }
+      else
+        { ticket_id: arguments[:ticket_id], status: "open" }
+      end
+    end
   end
 end
 
@@ -131,5 +150,58 @@ class MCPTest < Minitest::Test
     assert_equal true, run.tool_calls.first[:remote]
     assert_equal "lookup_ticket", run.tool_calls.first[:remote_tool_name]
     assert_equal "lookup_ticket", client.calls.first[:name]
+  end
+
+  def test_mcp_discover_shortcut
+    client = FakeMCPClient.new
+    tools = Rubot::MCP.discover(client, namespace: "ShortcutMCP")
+    assert_equal "Rubot::ShortcutMCP::LookupTicketTool", tools.first.name
+  end
+
+  def test_mcp_call_tool_shortcut
+    client = FakeMCPClient.new
+    result = Rubot::MCP.call_tool(client, "lookup_ticket", { ticket_id: "t_456" })
+    assert_equal "open", result[:status]
+  end
+
+  def test_mcp_call_tool_shortcut_raises_mcp_error
+    client = FakeMCPClient.new
+    error = assert_raises(Rubot::MCPError) do
+      Rubot::MCP.call_tool(client, "lookup_ticket", { is_error: true })
+    end
+    assert_match(/Remote Error Message/, error.message)
+    assert_equal true, error.details[:result][:isError]
+  end
+
+  def test_mcp_backed_tool_raises_mcp_error_for_remote_error_payload
+    client = FakeMCPClient.new
+    tool_class = Rubot::MCP::ToolRegistry.new(client:, namespace: "ErrorMCP").discover.first
+    run = Rubot::Run.new(name: "AuditRun", kind: :agent, input: {}, persist: false)
+
+    error = assert_raises(Rubot::MCPError) do
+      tool_class.new.execute(input: { ticket_id: "t_123", is_error: true }, run: run)
+    end
+
+    assert_match(/Remote Error Message/, error.message)
+    assert_equal "lookup_ticket", error.details[:name]
+  end
+
+  def test_mcp_call_tool_shortcut_normalizes_string_keys
+    client = FakeMCPClient.new(string_keys: true)
+    result = Rubot::MCP.call_tool(client, "lookup_ticket", { ticket_id: "t_456" })
+
+    assert_equal "open", result[:status]
+    assert_equal "t_456", result[:ticket_id]
+  end
+
+  def test_mcp_call_tool_shortcut_detects_string_keyed_error_payload
+    client = FakeMCPClient.new(string_keys: true)
+
+    error = assert_raises(Rubot::MCPError) do
+      Rubot::MCP.call_tool(client, "lookup_ticket", { is_error: true })
+    end
+
+    assert_match(/Remote Error Message/, error.message)
+    assert_equal true, error.details[:result][:isError]
   end
 end

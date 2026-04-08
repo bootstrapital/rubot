@@ -9,6 +9,24 @@ This means MCP tools:
 - show up in run traces, metrics, and audit records
 - remain subject to middleware, dynamic tool resolution, and approval-aware workflow design
 
+## Convenience API
+
+Rubot provides top-level helpers for common MCP tasks:
+
+### Discovery
+
+```ruby
+# Discover all tools on a client and register them in a namespace
+tools = Rubot::MCP.discover(client, namespace: "Support")
+```
+
+### Direct Execution
+
+```ruby
+# Call an MCP tool directly without registering it first
+result = Rubot::MCP.call_tool(client, "lookup_ticket", ticket_id: "123")
+```
+
 ## Design Rule
 
 MCP should enter through Rubot's tool model, not bypass it.

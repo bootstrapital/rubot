@@ -31,6 +31,14 @@ module Rubot
       @details = details
     end
   end
+  class MCPError < ExecutionError
+    attr_reader :details
+
+    def initialize(message = "MCP tool call failed", details: {})
+      super(message)
+      @details = details
+    end
+  end
   class CancellationError < ExecutionError; end
   class ApprovalRequired < Error; end
 end
