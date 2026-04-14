@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rubot (0.3.0)
+    rubot (0.3.1)
       activesupport
       faraday (>= 2.14)
       globalid
